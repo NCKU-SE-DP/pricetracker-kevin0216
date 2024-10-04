@@ -75,4 +75,10 @@ export default {
     font-weight: normal;
     margin-top: .5em;
 }
+
+@media only screen and (max-width: 600px) {
+  .wrapper{
+    padding: 3em 2em;
+  }
+}
 </style>

@@ -120,4 +120,18 @@ export default {
 .search-bar button:hover{
     cursor: pointer;
 }
+
+@media only screen and (max-width: 600px) {
+  .wrapper{
+    padding: 3em 2em;
+  }
+
+  .search-bar {
+    width: 100%;
+  }
+
+  .content {
+    padding: unset;
+  }
+}
 </style>

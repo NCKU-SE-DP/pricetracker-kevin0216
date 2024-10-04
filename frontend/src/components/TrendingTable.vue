@@ -1,5 +1,10 @@
 <template>
     <div class="trending-table">
+        <div class="noticetext">
+          <span>
+            ↔ 可滑動檢視完整表格 ↔
+          </span>
+        </div>
         <table>
             <thead>
                 <tr>
@@ -93,8 +98,22 @@ export default {
 </script>
 
 <style scoped>
+.noticetext {
+  display: none;
+  color: #888888;
+  text-align: center;
+  font-size: small;
+}
+
+@media only screen and (max-width: 600px) {
+  .noticetext {
+    display: block;
+  }
+}
+
 .trending-table {
     margin-top: 2em;
+    overflow-x: auto;
 }
 
 table {
