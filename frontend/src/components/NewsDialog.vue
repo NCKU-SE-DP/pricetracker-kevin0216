@@ -90,4 +90,10 @@ export default {
     cursor: pointer;
     color: #888;
 }
+
+@media only screen and (max-width: 600px) {
+  .content{
+    padding: unset;
+  }
+}
 </style>
