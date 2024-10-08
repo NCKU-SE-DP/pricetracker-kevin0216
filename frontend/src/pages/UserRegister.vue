@@ -14,8 +14,10 @@
 
                 <div class="ops">
                     <button type="submit" id="register">註冊</button>
+                    <button type="button" id="login"><RouterLink to="/login">登入</RouterLink></button>
                 </div>
             </form>
+
         </div>
     </div>
 </template>
@@ -83,7 +85,10 @@ export default {
     margin-top: 2em;
     background: #fff;
     padding: 2em;
+    margin-left: auto;
+    margin-right: auto;
     border-radius: 1em;
+    max-width: 500px;
     box-shadow: 0 0 10px rgba(0, 0, 0, .1);
 }
 
@@ -123,5 +128,31 @@ form > input{
 
 #register:hover{
     background-color: #46b8da;
+}
+
+#login{
+  background-color: #F3F3F3;
+  border: 1px solid #ccc;
+}
+
+#login > a{
+  text-decoration: none;
+  color: #000;
+}
+
+#login:hover{
+  background-color: #e8e8e8;
+}
+
+@media only screen and (max-width: 600px) {
+  .register-page {
+    padding: 2em 3em;
+  }
+
+  .container {
+    margin-left: unset;
+    margin-right: unset;
+    max-width: unset;
+  }
 }
 </style>

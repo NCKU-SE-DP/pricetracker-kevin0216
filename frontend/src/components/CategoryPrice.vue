@@ -3,7 +3,8 @@
         <h2>{{ categoryName }}</h2>
         <div v-if="isLoading">Loading...</div>
         <div v-if="errorMessage" class="error">{{ errorMessage }}</div>
-        <table v-if="!isLoading && !errorMessage">
+        <div class="table-wrapper" v-if="!isLoading && !errorMessage">
+        <table>
             <thead>
                 <tr>
                     <th>商品名稱</th>
@@ -19,6 +20,7 @@
                 </tr>
             </tbody>
         </table>
+    </div>
     </div>
 </template>
 
@@ -67,6 +69,9 @@ export default {
 </script>
 
 <style scoped>
+.table-wrapper {
+  width: 100%;
+}
 .error {
     color: red;
 }
@@ -94,5 +99,16 @@ h2{
     background-color: white;
     border-radius: 1em;
     padding: 2em;
+    width: max-content;
+}
+
+@media only screen and (max-width: 600px) {
+  .table-wrapper {
+    overflow-x: auto;
+  }
+
+  .category-price-wrapper {
+
+  }
 }
 </style>

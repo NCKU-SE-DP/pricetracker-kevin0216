@@ -6,6 +6,7 @@
 <script>
 // import { RouterView } from 'vue-router';
 import NavBar from './components/NavBar.vue'
+
 export default {
   name: 'App',
   components: {
@@ -29,5 +30,6 @@ export default {
 }
 .render{
   margin-top: 4.5em;
+  min-width: 450px;
 }
 </style>

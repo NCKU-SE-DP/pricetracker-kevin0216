@@ -13,7 +13,6 @@ import * as directives from 'vuetify/directives'
 
 import { BootstrapIconsPlugin } from "bootstrap-icons-vue";
 
-
 const app = createApp(App);
 const pinia = createPinia();
 
@@ -27,7 +26,7 @@ app.use(pinia)
     .use(router)
     .use(vuetify)
     .use(BootstrapIconsPlugin)
-    .mount('#app');
+    .mount('#app')
 
 const authStore = useAuthStore();
 authStore.initializeFromLocalStorage(); //初始化登入token
