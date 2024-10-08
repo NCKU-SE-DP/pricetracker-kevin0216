@@ -30,5 +30,6 @@ export default {
 }
 .render{
   margin-top: 4.5em;
+  min-width: 450px;
 }
 </style>

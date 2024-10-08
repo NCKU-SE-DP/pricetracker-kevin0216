@@ -1,7 +1,7 @@
 <template>
     <nav class="navbar">
-        <div class="title"> <RouterLink to="/overview">價格追蹤小幫手</RouterLink></div>
-        <div class="hamburger" @click="toggleMenu">
+        <div class="title"> <RouterLink to="/overview" @click="resetMenu">價格追蹤小幫手</RouterLink></div>
+        <div :class="{ 'hamburger': !menuVisible, 'hamburger-dark' : menuVisible}" @click="toggleMenu">
           <div class="bar"></div>
           <div class="bar"></div>
           <div class="bar"></div>
@@ -70,14 +70,36 @@ export default {
   cursor: pointer;
   flex-direction: column;
   justify-content: space-around;
-  height: 1.5em;
+  height: 2.3em;
+  border: 1px solid #333;
+  border-radius: 10px;
+  padding: 8px;
+}
+
+.hamburger-dark {
+  display: none;
+  cursor: pointer;
+  flex-direction: column;
+  justify-content: space-around;
+  background-color: black;
+  height: 2.3em;
+  border: 1px solid #333;
+  border-radius: 10px;
+  padding: 8px;
 }
 
 .hamburger .bar {
-  width: 25px;
-  height: 3px;
+  width: 20px;
+  height: 2px;
   background-color: #333;
-  margin: 3px 0;
+  margin: 2px 0;
+}
+
+.hamburger-dark .bar {
+  width: 20px;
+  height: 2px;
+  background-color: #ffffff;
+  margin: 2px 0;
 }
 
 .navbar ul {
@@ -103,7 +125,12 @@ export default {
   }
 
   .navbar li {
-    margin: .5em;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #797979;
+  }
+  .navbar li:last-child {
+    border-bottom: none;
   }
 
   .navbar ul.show-menu {
@@ -117,6 +144,10 @@ export default {
     box-shadow: 0 0 5px #000000;
   }
   .hamburger {
+    display: flex;
+  }
+
+  .hamburger-dark {
     display: flex;
   }
 }

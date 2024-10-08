@@ -8,7 +8,12 @@
                 <p>原文連結：<a :href="news.url" target="_blank">{{news.url}}</a></p>
                 <p v-for="paragraph, index in formattedContent" :key="index">{{ paragraph }}</p>
             </div>
-
+          <div>
+          <span class="close-txt" @click="close">
+            <i class="bi bi-x-lg"></i>
+            關閉文章
+          </span>
+          </div>
         </div>
     </div>
 </template>
@@ -40,6 +45,14 @@ export default {
 </script>
 
 <style scoped>
+.close-txt {
+  color: #797979;
+  display: none;
+  padding-top: 10px;
+  border-top: #333333 1px solid;
+  text-align: center;
+  font-size: medium;
+}
 .news-dialog {
     position: absolute;
     top: 50%;
@@ -48,7 +61,6 @@ export default {
     height: 90%;
     transform: translate(-50%, -50%);
     background: white;
-    padding: 20px;
     border-radius: 8px;
     padding: 3em 4em;
 }
@@ -92,8 +104,17 @@ export default {
 }
 
 @media only screen and (max-width: 600px) {
+  .close-btn {
+    display: none;
+  }
+  .close-txt {
+    display: block;
+  }
   .content{
     padding: unset;
+  }
+  .news-dialog {
+    padding: 3em 1.5em;
   }
 }
 </style>

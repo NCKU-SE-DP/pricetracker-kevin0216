@@ -55,9 +55,12 @@ export default {
 
 .container {
     margin-top: 2em;
+    margin-left: auto;
+    margin-right: auto;
     background: #fff;
     padding: 2em;
     border-radius: 1em;
+    max-width: 500px;
     box-shadow: 0 0 10px rgba(0, 0, 0, .1);
 }
 
@@ -110,5 +113,17 @@ form > input{
 
 #login:hover{
     background-color: #46b8da;
+}
+
+@media only screen and (max-width: 600px) {
+  .login-page {
+    padding: 2em 3em;
+  }
+
+  .container {
+    margin-left: unset;
+    margin-right: unset;
+    max-width: unset;
+  }
 }
 </style>
