@@ -365,9 +365,9 @@ def read_news(db=Depends(session_opener)):
     news = db.query(NewsArticle).order_by(NewsArticle.time.desc()).all()
     result = []
     for news_item in news:
-        upvotes, upvoted = get_article_upvote_details(news_item.id, None, db)
+        upvote_num, is_upvoted = get_article_upvote_details(news_item.id, None, db)
         result.append(
-            {**news_item.__dict__, "upvotes": upvotes, "is_upvoted": upvoted}
+            {**news_item.__dict__, "upvotes": upvote_num, "is_upvoted": is_upvoted}
         )
     return result
 
@@ -389,12 +389,12 @@ def read_user_news(
     news = db.query(NewsArticle).order_by(NewsArticle.time.desc()).all()
     result = []
     for article in news:
-        upvotes, upvoted = get_article_upvote_details(article.id, user.id, db)
+        upvote_num, is_upvoted = get_article_upvote_details(article.id, user.id, db)
         result.append(
             {
                 **article.__dict__,
-                "upvotes": upvotes,
-                "is_upvoted": upvoted,
+                "upvotes": upvote_num,
+                "is_upvoted": is_upvoted,
             }
         )
     return result
@@ -449,12 +449,12 @@ async def search_news(request: PromptRequest):
             print(exception)
     return sorted(news_list, key=lambda x: x["time"], reverse=True)
 
-class NewsSumaryRequestSchema(BaseModel):
+class NewsSummaryRequestSchema(BaseModel):
     content: str
 
 @app.post("/api/v1/news/news_summary")
 async def news_summary(
-        payload: NewsSumaryRequestSchema, user=Depends(authenticate_user_token)
+        payload: NewsSummaryRequestSchema, user=Depends(authenticate_user_token)
 ):
     response = {}
     ai_prompt = [
