@@ -128,7 +128,7 @@ from bs4 import BeautifulSoup
 from sqlalchemy.orm import Session
 
 
-def add_new(news_data):
+def add_new_news(news_data):
     """
     add new to db
     :param news_data: news info
@@ -147,7 +147,7 @@ def add_new(news_data):
     session.close()
 
 
-def get_new_info(search_term, is_initial=False):
+def get_new_news_info(search_term, is_initial=False):
     """
     get new
 
@@ -183,14 +183,14 @@ def get_new_info(search_term, is_initial=False):
         all_news_data = response.json()["lists"]
     return all_news_data
 
-def get_new(is_initial=False):
+def get_new_news(is_initial=False):
     """
     get new info
 
     :param is_initial:
     :return:
     """
-    news_data = get_new_info("價格", is_initial=is_initial)
+    news_data = get_new_news_info("價格", is_initial=is_initial)
     for news in news_data:
         title = news["title"]
         ai_prompt = [
@@ -241,7 +241,7 @@ def get_new(is_initial=False):
             result = json.loads(result)
             detailed_news["summary"] = result["影響"]
             detailed_news["reason"] = result["原因"]
-            add_new(detailed_news)
+            add_new_news(detailed_news)
 
 
 @app.on_event("startup")
@@ -249,9 +249,9 @@ def start_scheduler():
     db = SessionLocal()
     if db.query(NewsArticle).count() == 0:
         # should change into simple factory pattern
-        get_new()
+        get_new_news()
     db.close()
-    bgs.add_job(get_new, "interval", minutes=100)
+    bgs.add_job(get_new_news, "interval", minutes=100)
     bgs.start()
 
 
@@ -421,7 +421,7 @@ async def search_news(request: PromptRequest):
     )
     keywords = completion.choices[0].message.content
     # should change into simple factory pattern
-    news_items = get_new_info(keywords, is_initial=False)
+    news_items = get_new_news_info(keywords, is_initial=False)
     for news in news_items:
         try:
             response = requests.get(news["titleLink"])
