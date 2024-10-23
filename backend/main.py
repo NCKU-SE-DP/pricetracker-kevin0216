@@ -22,6 +22,7 @@ from sqlalchemy.orm import relationship, sessionmaker
 
 Base = declarative_base()
 
+SECRET_KEY = "1892dhianiandowqd0n"
 
 user_news_association_table = Table(
     "user_news_upvotes",
@@ -287,7 +288,7 @@ def authenticate_user_token(
     token = Depends(oauth2_scheme),
     db = Depends(session_opener)
 ):
-    payload = jwt.decode(token, '1892dhianiandowqd0n', algorithms=["HS256"])
+    payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
     return db.query(User).filter(User.username == payload.get("sub")).first()
 
 

@@ -6,7 +6,7 @@ import json
 from jose import jwt
 from main import app
 from main import Base, NewsArticle, User, session_opener, user_news_association_table
-from main import NewsSumaryRequestSchema, PromptRequest
+from main import NewsSummaryRequestSchema, PromptRequest
 from main import pwd_context
 from unittest.mock import Mock
 
@@ -14,9 +14,9 @@ from unittest.mock import Mock
 SECRET_KEY = "1892dhianiandowqd0n"
 ALGORITHM = "HS256"
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}, poolclass=StaticPool)
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base.metadata.create_all(bind=engine)
+db_engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}, poolclass=StaticPool)
+TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=db_engine)
+Base.metadata.create_all(bind=db_engine)
 
 
 def override_session_opener():
