@@ -478,7 +478,7 @@ async def news_summary(
     return response
 
 
-@app.post("/api/v1/news/{id}/upvote")
+@app.post("/api/v1/news/{news_id}/upvote")
 def upvote_article(
         news_id,
         db=Depends(session_opener),
@@ -511,7 +511,6 @@ def toggle_upvote(news_id, user_id, db):
         db.execute(insert_stmt)
         db.commit()
         return "Article upvoted"
-
 
 def news_exists(news_id, db: Session):
     return db.query(NewsArticle).filter_by(id=news_id).first() is not None
