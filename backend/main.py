@@ -62,11 +62,11 @@ class NewsArticle(Base):
     )
 
 
-engine = create_engine("sqlite:///news_database.db", echo=True)
+db_engine = create_engine("sqlite:///news_database.db", echo=True)
 
-Base.metadata.create_all(engine)
+Base.metadata.create_all(db_engine)
 
-Session = sessionmaker(bind=engine)
+Session = sessionmaker(bind=db_engine)
 
 sentry_sdk.init(
     dsn="https://4001ffe917ccb261aa0e0c34026dc343@o4505702629834752.ingest.us.sentry.io/4507694792704000",
@@ -76,7 +76,7 @@ sentry_sdk.init(
 
 app = FastAPI()
 bgs = BackgroundScheduler()
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=db_engine)
 
 app.add_middleware(
     CORSMiddleware,  # noqa
@@ -265,7 +265,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/users/login")
 
 
 def session_opener():
-    session = Session(bind=engine)
+    session = Session(bind=db_engine)
     try:
         yield session
     finally:
