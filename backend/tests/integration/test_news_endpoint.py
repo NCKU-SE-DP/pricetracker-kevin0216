@@ -5,12 +5,12 @@ from sqlalchemy.orm import sessionmaker
 import json
 from jose import jwt
 
-from backend.src.main import app
-from backend.src.models import Base, NewsArticle, User
-from backend.src.users.models import user_news_association_table
-from backend.src.news.schema import NewsSummaryRequestSchema, PromptRequest
-from backend.src.auth.utils import password_context
-from backend.src.auth.dependencies import session_opener
+from src.main import app
+from src.news.schema import NewsSummaryRequestSchema, PromptRequest
+from src.models import Base, NewsArticle, User, user_news_association_table
+from src.auth.utils import password_context
+from src.auth.dependencies import session_opener
+
 from unittest.mock import Mock
 
 SECRET_KEY = "1892dhianiandowqd0n"
@@ -129,7 +129,7 @@ def mock_openai(mocker, return_content):
 def test_search_news(mocker):
     mock_openai(mocker, "keywords")
 
-    mock_get_new_info = mocker.patch("main.get_new_news_info", return_value=[
+    mock_get_new_info = mocker.patch(".news.utils.fetch_latest_news_info", return_value=[
         {"titleLink": "http://example.com/news1"}
     ])
 
