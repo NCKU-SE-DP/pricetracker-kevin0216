@@ -4,12 +4,14 @@ from sqlalchemy import create_engine, StaticPool
 from sqlalchemy.orm import sessionmaker
 import json
 from jose import jwt
-from main import app
-from main import Base, NewsArticle, User, session_opener, user_news_association_table
-from main import NewsSummaryRequestSchema, PromptRequest
-from main import pwd_context
-from unittest.mock import Mock
 
+from backend.src.main import app
+from backend.src.models import Base, NewsArticle, User
+from backend.src.users.models import user_news_association_table
+from backend.src.news.schema import NewsSummaryRequestSchema, PromptRequest
+from backend.src.auth.utils import password_context
+from backend.src.auth.dependencies import session_opener
+from unittest.mock import Mock
 
 SECRET_KEY = "1892dhianiandowqd0n"
 ALGORITHM = "HS256"
@@ -38,7 +40,7 @@ def clear_users():
 
 @pytest.fixture(scope="module")
 def test_user(clear_users):
-    hashed_password = pwd_context.hash("testpassword")
+    hashed_password = password_context.hash("testpassword")
 
     with next(override_session_opener()) as db:
         user = User(username="testuser", hashed_password=hashed_password)
