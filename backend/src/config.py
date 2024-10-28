@@ -4,6 +4,7 @@ class Config:
         SENTRY_DSN = "https://4001ffe917ccb261aa0e0c34026dc343@o4505702629834752.ingest.us.sentry.io/4507694792704000"
         SENTRY_TRACES_SAMPLE_RATE = 1.0
         SENTRY_PROFILES_SAMPLE_RATE = 1.0
+        ALLOWED_ORIGINS = ["http://localhost:8080"]
 
     class OpenAI:
         OPENAI_ENABLED = True

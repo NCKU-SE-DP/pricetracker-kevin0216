@@ -21,7 +21,7 @@ app.include_router(prices_router, prefix=Config.Basic.FASTAPI_PREFIX)
 
 app.add_middleware(
     CORSMiddleware,  # noqa
-    allow_origins=["http://localhost:8080"],
+    allow_origins=Config.Basic.ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
