@@ -15,7 +15,7 @@ from unittest.mock import Mock
 
 SECRET_KEY = "1892dhianiandowqd0n"
 ALGORITHM = "HS256"
-SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
+SQLALCHEMY_DATABASE_URL = "sqlite:///../../test.db"
 db_engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}, poolclass=StaticPool)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=db_engine)
 Base.metadata.create_all(bind=db_engine)
@@ -111,7 +111,7 @@ def test_read_user_news(test_user, test_token, test_articles):
     assert json_response[1]["is_upvoted"] is False
 
 def mock_openai(mocker, return_content):
-    mock_openai_client = mocker.patch('main.OpenAI')
+    mock_openai_client = mocker.patch('src.utils.openai_client')
 
     mock_message = Mock()
     mock_message.content = return_content
@@ -122,18 +122,18 @@ def mock_openai(mocker, return_content):
     mock_completion = Mock()
     mock_completion.choices = [mock_choice]
 
-    mock_openai_client.return_value.chat.completions.create.return_value = mock_completion
+    mock_openai_client.chat.completions.create.return_value = mock_completion
 
     return mock_openai_client
 
 def test_search_news(mocker):
     mock_openai(mocker, "keywords")
 
-    mock_get_new_info = mocker.patch(".news.utils.fetch_latest_news_info", return_value=[
+    mock_get_new_info = mocker.patch("src.news.router.fetch_latest_news_info", return_value=[
         {"titleLink": "http://example.com/news1"}
     ])
 
-    mock_get = mocker.patch("main.requests.get", return_value=mocker.Mock(
+    mock_get = mocker.patch("src.news.utils.requests.get", return_value=mocker.Mock(
         text="""
         <html>
         <h1 class="article-content__title">Test Title</h1>
