@@ -1,12 +1,12 @@
 import sentry_sdk
 from apscheduler.schedulers.background import BackgroundScheduler
 
-from .config import SENTRY_DSN, SENTRY_TRACES_SAMPLE_RATE, SENTRY_PROFILES_SAMPLE_RATE
+from .config import Config
 
 sentry_sdk.init(
-    dsn=SENTRY_DSN,
-    traces_sample_rate=SENTRY_TRACES_SAMPLE_RATE,
-    profiles_sample_rate=SENTRY_PROFILES_SAMPLE_RATE,
+    dsn=Config.Basic.SENTRY_DSN,
+    traces_sample_rate=Config.Basic.SENTRY_TRACES_SAMPLE_RATE,
+    profiles_sample_rate=Config.Basic.SENTRY_PROFILES_SAMPLE_RATE,
 )
 
 background_scheduler = BackgroundScheduler()

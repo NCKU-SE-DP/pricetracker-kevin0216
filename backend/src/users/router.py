@@ -3,7 +3,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from datetime import timedelta
 from sqlalchemy.orm import Session
 
-from ..config import ACCESS_TOKEN_EXPIRE_MINUTES
+from ..config import Config
 from ..auth.dependencies import session_opener, authenticate_user_token
 from ..auth.utils import check_user_password_is_correct, create_access_token, password_context
 
@@ -11,7 +11,7 @@ from ..models import User
 from .schema import UserAuthSchema
 
 router = APIRouter(
-    prefix="/api/v1/users",
+    prefix="/users",
     tags=["users"],
     responses={404: {"description": "Not found"}},
 )
@@ -23,7 +23,7 @@ async def login_for_access_token(
     """login"""
     user = check_user_password_is_correct(db, form_data.username, form_data.password)
     access_token = create_access_token(
-        data={"sub": str(user.username)}, expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        data={"sub": str(user.username)}, valid_duration=timedelta(minutes=Config.Auth.ACCESS_TOKEN_EXPIRE_MINUTES)
     )
     return {"access_token": access_token, "token_type": "bearer"}
 

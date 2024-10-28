@@ -2,7 +2,7 @@ from sqlalchemy import Column, ForeignKey, Integer, Table, Text, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
-from .config import USERNAME_MAX_LENGTH, HASHED_PASSWORD_MAX_LENGTH
+from .config import Config
 
 Base = declarative_base()
 
@@ -31,8 +31,8 @@ class NewsArticle(Base):
 class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, autoincrement=True)
-    username = Column(String(USERNAME_MAX_LENGTH), unique=True, nullable=False)
-    hashed_password = Column(String(HASHED_PASSWORD_MAX_LENGTH), nullable=False)
+    username = Column(String(Config.Auth.USERNAME_MAX_LENGTH), unique=True, nullable=False)
+    hashed_password = Column(String(Config.Auth.HASHED_PASSWORD_MAX_LENGTH), nullable=False)
     upvoted_news = relationship(
         "NewsArticle",
         secondary=user_news_association_table,

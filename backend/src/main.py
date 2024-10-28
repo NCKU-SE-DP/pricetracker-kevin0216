@@ -1,12 +1,13 @@
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI
-from sqlalchemy.orm import relationship, sessionmaker
+from sqlalchemy.orm import sessionmaker
 
 from .database import db_engine
 from .models import NewsArticle
-from .news.utils import fetch_latest_news
 from .services import background_scheduler
+from .config import Config
 
+from .news.utils import fetch_latest_news
 from .news.router import router as news_router
 from .users.router import router as users_router
 from .prices.router import router as prices_router
@@ -14,9 +15,9 @@ from .prices.router import router as prices_router
 app = FastAPI()
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=db_engine)
 
-app.include_router(news_router)
-app.include_router(users_router)
-app.include_router(prices_router)
+app.include_router(news_router, prefix=Config.Basic.FASTAPI_PREFIX)
+app.include_router(users_router, prefix=Config.Basic.FASTAPI_PREFIX)
+app.include_router(prices_router, prefix=Config.Basic.FASTAPI_PREFIX)
 
 app.add_middleware(
     CORSMiddleware,  # noqa
@@ -33,7 +34,7 @@ def start_scheduler():
         # should change into simple factory pattern
         fetch_latest_news()
     db.close()
-    background_scheduler.add_job(fetch_latest_news, "interval", minutes=100)
+    background_scheduler.add_job(fetch_latest_news, "interval", minutes=Config.News.NEWS_FETCH_INTERVAL_MINUTES)
     background_scheduler.start()
 
 @app.on_event("shutdown")

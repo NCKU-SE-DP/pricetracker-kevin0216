@@ -3,22 +3,23 @@ from openai import OpenAI, APIError, RateLimitError
 from typing import List, Dict, Optional, Union
 import itertools
 
-from .config import OPENAI_TOKEN, OPENAI_LLM_MODEL, OPENAI_ENABLED
+from .config import Config
 from .database import db_engine
 
 _id_counter = itertools.count(start=1000000)
 session = sessionmaker(bind=db_engine)
 
-openai_client = OpenAI(api_key=OPENAI_TOKEN)
+openai_client = OpenAI(api_key=Config.OpenAI.OPENAI_TOKEN)
 
 def llm_generate(prompt: List[Dict[str, str]]) -> Optional[Union[str, Dict[str, str]]]:
-    if OPENAI_ENABLED:
+    if Config.OpenAI.OPENAI_ENABLED:
         try:
             completion = openai_client.chat.completions.create(
-                model=OPENAI_LLM_MODEL,
+                model=Config.OpenAI.OPENAI_LLM_MODEL,
                 messages=prompt,
             )
-            return completion.choices[0].message.content
+            completion_content =  completion.choices[0].message.content
+            return completion_content
         except APIError as error:
             print(f"[OpenAI] An error occurred: {error}")
             return None

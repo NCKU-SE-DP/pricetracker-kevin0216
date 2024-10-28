@@ -9,7 +9,7 @@ from ..models import NewsArticle
 from .schema import PromptRequest, NewsSummaryRequestSchema
 
 router = APIRouter(
-    prefix="/api/v1/news",
+    prefix="/news",
     tags=["news"],
     responses={404: {"description": "Not found"}},
 )
