@@ -124,17 +124,17 @@ def fetch_latest_news(is_initial=False):
             detailed_news["reason"] = result["原因"]
             import_news(detailed_news)
 
-def get_article_upvote_details(article_id, user_id, db):
+def get_news_upvote_details(news_id, user_id, db):
     count = (
         db.query(user_news_association_table)
-        .filter_by(news_articles_id=article_id)
+        .filter_by(news_articles_id=news_id)
         .count()
     )
     voted = False
     if user_id:
         voted = (
                 db.query(user_news_association_table)
-                .filter_by(news_articles_id=article_id, user_id=user_id)
+                .filter_by(news_articles_id=news_id, user_id=user_id)
                 .first()
                 is not None
         )

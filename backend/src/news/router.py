@@ -4,7 +4,7 @@ import json
 from ..auth.dependencies import session_opener, authenticate_user_token
 from ..utils import _id_counter, llm_generate
 
-from .utils import toggle_upvote, get_article_upvote_details, fetch_latest_news_info, extract_news
+from .utils import toggle_upvote, get_news_upvote_details, fetch_latest_news_info, extract_news
 from ..models import NewsArticle
 from .schema import PromptRequest, NewsSummaryRequestSchema
 
@@ -24,17 +24,17 @@ def upvote_article(
     return {"message": message}
 
 @router.get("/news")
-def read_news(db=Depends(session_opener)):
+def fetch_news(db=Depends(session_opener)):
     """
-    read new
+    fetching all available news
 
-    :param db:
-    :return:
+    :param db: Database (Depends Session)
+    :return List[Dict[str, bool]]: List of news
     """
     news = db.query(NewsArticle).order_by(NewsArticle.time.desc()).all()
     result = []
     for news_item in news:
-        upvote_num, is_upvoted = get_article_upvote_details(news_item.id, None, db)
+        upvote_num, is_upvoted = get_news_upvote_details(news_item.id, None, db)
         result.append(
             {**news_item.__dict__, "upvotes": upvote_num, "is_upvoted": is_upvoted}
         )
@@ -46,16 +46,16 @@ def fetch_user_upvoted_news(
         user=Depends(authenticate_user_token)
 ):
     """
-    read users new
+    fetching all news upvoted by user
 
-    :param db:
-    :param user:
-    :return:
+    :param db: Database (Depends Session)
+    :param user: User (Depends authenticate_user_token)
+    :return List[Dict[str, bool]]: List of news
     """
     news = db.query(NewsArticle).order_by(NewsArticle.time.desc()).all()
     result = []
     for article in news:
-        upvote_num, is_upvoted = get_article_upvote_details(article.id, user.id, db)
+        upvote_num, is_upvoted = get_news_upvote_details(article.id, user.id, db)
         result.append(
             {
                 **article.__dict__,
