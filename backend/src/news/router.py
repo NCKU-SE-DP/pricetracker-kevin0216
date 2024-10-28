@@ -14,7 +14,7 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
-@router.post("/upvote")
+@router.post("/{news_id}/upvote")
 def upvote_article(
         news_id,
         db=Depends(session_opener),
