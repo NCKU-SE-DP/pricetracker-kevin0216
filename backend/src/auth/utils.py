@@ -15,7 +15,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl=Config.Auth.TOKEN_ENTRY_URL)
 def verify_password(secret, hashed_secret) -> bool:
     return password_context.verify(secret, hashed_secret)
 
-def check_user_password_is_correct(db, username, password) -> Union[User, False]:
+def check_user_password_is_correct(db, username, password) -> Union[User, bool]:
     userdata = db.query(User).filter(User.username == username).first()
     if not verify_password(password, userdata.hashed_password):
         return False
