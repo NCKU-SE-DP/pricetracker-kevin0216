@@ -1,12 +1,13 @@
 from sqlalchemy.orm import Session
 from fastapi import Depends
 from jose import jwt
+from fastapi.security import OAuth2PasswordBearer
 
 from ..database import db_engine
 from ..models import User
 from ..config import Config
 
-from ..auth.utils import oauth2_scheme
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl=Config.Auth.TOKEN_ENTRY_URL)
 
 def session_opener():
     session = Session(bind=db_engine)
