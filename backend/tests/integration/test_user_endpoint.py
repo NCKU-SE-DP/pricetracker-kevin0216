@@ -2,15 +2,16 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, StaticPool
 from sqlalchemy.orm import sessionmaker
-from main import app
-from main import Base, User, session_opener
+from src.main import app
+from src.models import Base, User
+from src.auth.dependencies import session_opener
 from jose import jwt
-from main import pwd_context
+from src.auth.utils import password_context
 
 SECRET_KEY = "1892dhianiandowqd0n"
 ALGORITHM = "HS256"
 # SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
-SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
+SQLALCHEMY_DATABASE_URL = "sqlite:///../../test.db"
 db_engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}, poolclass=StaticPool)
 
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=db_engine)
@@ -38,7 +39,7 @@ def clear_users():
 
 @pytest.fixture(scope="module")
 def test_user(clear_users):
-    hashed_password = pwd_context.hash("testpassword")
+    hashed_password = password_context.hash("testpassword")
 
     with next(override_session_opener()) as db:
         user = User(username="testuser", hashed_password=hashed_password)
