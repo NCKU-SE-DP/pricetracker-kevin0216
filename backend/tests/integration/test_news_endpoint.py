@@ -15,7 +15,7 @@ from unittest.mock import Mock
 
 SECRET_KEY = "1892dhianiandowqd0n"
 ALGORITHM = "HS256"
-SQLALCHEMY_DATABASE_URL = "sqlite:///../../test.db"
+SQLALCHEMY_DATABASE_URL = "sqlite:///../test.db"
 db_engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}, poolclass=StaticPool)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=db_engine)
 Base.metadata.create_all(bind=db_engine)
