@@ -22,9 +22,11 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: getsentry/action-setup-venv@v2.1.0
         with:
           python-version: "3.12"
+          cache-dependency-path: |
+            backend/requirements.txt
 
       - name: Install dependencies
         run: |
@@ -45,13 +47,16 @@ jobs:
         run: |
           cd backend
           pytest tests/integration --cov=src --cov-report=xml --disable-warnings
-          rm -rf ../../../pricetracker-kevin0216
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v3
         with:
           name: coverage-report
           path: coverage.xml
+
+      - name: Cleanup working directory
+        run: |
+          rm -rf ../../../pricetracker-kevin0216
 
   # lint:
   #   runs-on: ubuntu-latest
