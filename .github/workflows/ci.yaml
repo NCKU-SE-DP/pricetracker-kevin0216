@@ -45,6 +45,7 @@ jobs:
         run: |
           cd backend
           pytest tests/integration --cov=src --cov-report=xml --disable-warnings
+          rm -rf ../../../pricetracker-kevin0216
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v3
