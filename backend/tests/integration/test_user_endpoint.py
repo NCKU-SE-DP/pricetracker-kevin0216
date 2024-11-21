@@ -11,7 +11,7 @@ from src.auth.utils import password_context
 SECRET_KEY = "1892dhianiandowqd0n"
 ALGORITHM = "HS256"
 # SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
-SQLALCHEMY_DATABASE_URL = "sqlite:///../../test.db"
+SQLALCHEMY_DATABASE_URL = "sqlite:///../test.db"
 db_engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}, poolclass=StaticPool)
 
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=db_engine)

@@ -4,22 +4,29 @@ on:
   push:
     branches:
       - 'main'
+      - 'develop'
+      - 'refactor/*'
+      - 'ci/*'
+      - 'feat/*'
   pull_request:
     branches:
       - 'main'
+      - 'develop'
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: [F74134760]
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: getsentry/action-setup-venv@v2.1.0
         with:
           python-version: "3.12"
+          cache-dependency-path: |
+            backend/requirements.txt
 
       - name: Install dependencies
         run: |
@@ -46,6 +53,10 @@ jobs:
         with:
           name: coverage-report
           path: coverage.xml
+
+      - name: Cleanup working directory
+        run: |
+          rm -rf ../../../pricetracker-kevin0216
 
   # lint:
   #   runs-on: ubuntu-latest
