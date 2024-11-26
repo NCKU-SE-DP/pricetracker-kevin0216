@@ -4,7 +4,7 @@ import json
 from ..auth.dependencies import session_opener, authenticate_user_token
 from ..utils import _id_counter, llm_generate
 
-from .utils import toggle_upvote, fetch_news_upvote_details, fetch_latest_news_info, extract_news
+from .utils import toggle_upvote, fetch_news_upvote_details, fetch_latest_news_info, udn_crawler
 from ..models import NewsArticle
 from .schema import PromptRequest, NewsSummaryRequestSchema
 
@@ -79,17 +79,16 @@ async def search_news(request: PromptRequest):
 
     keywords = llm_generate(extract_keyword_prompt)
     # should change into simple factory pattern
-    news_items = fetch_latest_news_info(keywords, is_initial=False)
+    news_items = fetch_latest_news_info(keywords)
     for news in news_items:
         try:
-            detailed_news = extract_news(news)
+            detailed_news = udn_crawler.validate_and_parse(news.url)
 
-            detailed_news["content"] = " ".join(detailed_news["content"])
-            detailed_news["id"] = next(_id_counter)
+            detailed_news.id = next(_id_counter)
             news_list.append(detailed_news)
         except Exception as exception:
             print(exception)
-    return sorted(news_list, key=lambda x: x["time"], reverse=True)
+    return sorted(news_list, key=lambda x: x.time, reverse=True)
 
 @router.post("/news_summary")
 async def news_summary(
