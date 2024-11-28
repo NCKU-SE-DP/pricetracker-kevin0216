@@ -5,55 +5,23 @@ from sqlalchemy import delete, insert, select
 from sqlalchemy.orm import Session
 from bs4 import BeautifulSoup
 
-from ..models import user_news_association_table
+from ..crawler.crawler_base import NewsWithSummary
+from ..models import user_news_association_table, NewsArticle
 from ..utils import llm_generate
+from ..crawler.udn_crawler import UDNCrawler
 
-from ..models import NewsArticle
+udn_crawler = UDNCrawler()
 
-
-def extract_news(news):
-    response = requests.get(news["titleLink"])
-    soup = BeautifulSoup(response.text, "html.parser")
-    # 標題
-    title = soup.find("h1", class_="article-content__title").text
-    content_time = soup.find("time", class_="article-content__time").text
-    # 定位到包含文章内容的 <section>
-    content_section = soup.find("section", class_="article-content__editor")
-
-    paragraphs = [
-        paragraph.text
-        for paragraph in content_section.find_all("p")
-        if paragraph.text.strip() != "" and "▪" not in paragraph.text
-    ]
-    detailed_news = {
-        "url": news["titleLink"],
-        "title": title,
-        "time": content_time,
-        "content": paragraphs,
-    }
-
-    return detailed_news
-
-def import_news(news_data):
+def import_news(news_data: NewsWithSummary):
     """
     add new to db
     :param news_data: news info
     :return:
     """
     session = Session()
-    session.add(NewsArticle(
-        url=news_data["url"],
-        title=news_data["title"],
-        time=news_data["time"],
-        content=" ".join(news_data["content"]),  # 將內容list轉換為字串
-        summary=news_data["summary"],
-        reason=news_data["reason"],
-    ))
-    session.commit()
-    session.close()
+    udn_crawler.save(news_data, session)
 
-
-def fetch_latest_news_info(search_term, is_initial=False):
+def fetch_latest_news_info(search_term: str, is_initial=False):
     """
     get new
 
@@ -61,33 +29,7 @@ def fetch_latest_news_info(search_term, is_initial=False):
     :param is_initial:
     :return:
     """
-    all_news_data = []
-    # iterate pages to get more news data, not actually get all news data
-    if is_initial:
-        news_data = []
-        for page in range(1, 10):
-            page_metadata = {
-                "page": page,
-                "id": f"search:{quote(search_term)}",
-                "channelId": 2,
-                "type": "searchword",
-            }
-            response = requests.get("https://udn.com/api/more", params=page_metadata)
-            news_data.append(response.json()["lists"])
-
-        for news_list in news_data:
-            all_news_data.append(news_list)
-    else:
-        page_metadata = {
-            "page": 1,
-            "id": f"search:{quote(search_term)}",
-            "channelId": 2,
-            "type": "searchword",
-        }
-        response = requests.get("https://udn.com/api/more", params=page_metadata)
-
-        all_news_data = response.json()["lists"]
-    return all_news_data
+    return udn_crawler.get_headline(search_term, (1, 10) if is_initial else 1)
 
 def fetch_latest_news(is_initial=False):
     """
@@ -98,7 +40,7 @@ def fetch_latest_news(is_initial=False):
     """
     news_data = fetch_latest_news_info("價格", is_initial=is_initial)
     for news in news_data:
-        title = news["title"]
+        title = news.title
         relevance_judge_prompt = [
             {
                 "role": "system",
@@ -108,7 +50,7 @@ def fetch_latest_news(is_initial=False):
         ]
         relevance = llm_generate(relevance_judge_prompt)
         if relevance == "high":
-            detailed_news = extract_news(news)
+            detailed_news = udn_crawler.validate_and_parse(news.url)
 
             summarizer_prompt = [
                 {
@@ -120,8 +62,14 @@ def fetch_latest_news(is_initial=False):
 
             result = llm_generate(summarizer_prompt)
             result = json.loads(result)
-            detailed_news["summary"] = result["影響"]
-            detailed_news["reason"] = result["原因"]
+            detailed_news = NewsWithSummary(
+                url=detailed_news.url,
+                title=detailed_news.title,
+                time=detailed_news.time,
+                content=detailed_news.content,
+                summary=result["影響"],
+                reason=result["原因"],
+            )
             import_news(detailed_news)
 
 def fetch_news_upvote_details(news_id, user_id, db):

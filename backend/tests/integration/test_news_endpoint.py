@@ -10,6 +10,7 @@ from src.news.schema import NewsSummaryRequestSchema, PromptRequest
 from src.models import Base, NewsArticle, User, user_news_association_table
 from src.auth.utils import password_context
 from src.auth.dependencies import session_opener
+from src.crawler.crawler_base import NewsCrawlerBase, Headline
 
 from unittest.mock import Mock
 
@@ -20,6 +21,26 @@ db_engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thr
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=db_engine)
 Base.metadata.create_all(bind=db_engine)
 
+# class MockNewsCrawler(NewsCrawlerBase):
+#     news_website_url = "https://www.example.com"
+#     news_website_news_child_urls = ["https://news.example.com"]
+#
+#     def get_headline(self, search_term: str, page: int | tuple[int, int]):
+#         return [Headline(title="Test Article", url="https://www.example.com/article")]
+#
+#     def parse(self, url: AnyHttpUrl | str):
+#         return News(
+#             title="Test Article",
+#             url=url,
+#             time="2023-09-08T00:00:00",
+#             content="This is the content of the article."
+#         )
+#
+#     @staticmethod
+#     def save(news: News, db=None):
+#         return True
+#
+# crawler = MockNewsCrawler()
 
 def override_session_opener():
     try:
@@ -130,10 +151,10 @@ def test_search_news(mocker):
     mock_openai(mocker, "keywords")
 
     mock_get_new_info = mocker.patch("src.news.router.fetch_latest_news_info", return_value=[
-        {"titleLink": "http://example.com/news1"}
+        Headline(title="Test Title", url="https://udn.com/api/more/testing/news1")
     ])
 
-    mock_get = mocker.patch("src.news.utils.requests.get", return_value=mocker.Mock(
+    mock_get = mocker.patch("src.crawler.udn_crawler.get", return_value=mocker.Mock(
         text="""
         <html>
         <h1 class="article-content__title">Test Title</h1>
