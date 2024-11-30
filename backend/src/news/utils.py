@@ -1,16 +1,15 @@
-from urllib.parse import quote
-import requests
 import json
 from sqlalchemy import delete, insert, select
 from sqlalchemy.orm import Session
-from bs4 import BeautifulSoup
 
 from ..crawler.crawler_base import NewsWithSummary
+from ..config import Config
+from ..llm_client.llm_client import LLMClient
 from ..models import user_news_association_table, NewsArticle
-from ..utils import llm_generate
 from ..crawler.udn_crawler import UDNCrawler
 
 udn_crawler = UDNCrawler()
+llm_client = LLMClient(_api_key=Config.OpenAI.OPENAI_TOKEN)
 
 def import_news(news_data: NewsWithSummary):
     """
@@ -41,26 +40,11 @@ def fetch_latest_news(is_initial=False):
     news_data = fetch_latest_news_info("價格", is_initial=is_initial)
     for news in news_data:
         title = news.title
-        relevance_judge_prompt = [
-            {
-                "role": "system",
-                "content": "你是一個關聯度評估機器人，請評估新聞標題是否與「民生用品的價格變化」相關，並給予'high'、'medium'、'low'評價。(僅需回答'high'、'medium'、'low'三個詞之一)",
-            },
-            {"role": "users", "content": f"{title}"},
-        ]
-        relevance = llm_generate(relevance_judge_prompt)
+        relevance = llm_client.evaluate_relevance(title, "民生用品的價格變化")
         if relevance == "high":
             detailed_news = udn_crawler.validate_and_parse(news.url)
 
-            summarizer_prompt = [
-                {
-                    "role": "system",
-                    "content": "你是一個新聞摘要生成機器人，請統整新聞中提及的影響及主要原因 (影響、原因各50個字，請以json格式回答 {'影響': '...', '原因': '...'})",
-                },
-                {"role": "users", "content": " ".join(detailed_news["content"])},
-            ]
-
-            result = llm_generate(summarizer_prompt)
+            result = llm_client.generate_summary(" ".join(detailed_news["content"]))
             result = json.loads(result)
             detailed_news = NewsWithSummary(
                 url=detailed_news.url,
