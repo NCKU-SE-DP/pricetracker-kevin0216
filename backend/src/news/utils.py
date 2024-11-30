@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from ..crawler.crawler_base import NewsWithSummary
 from ..config import Config
 from ..llm_client.llm_client import LLMClient
+from ..llm_client.base import RelevanceEvaluation
 from ..models import user_news_association_table, NewsArticle
 from ..crawler.udn_crawler import UDNCrawler
 
@@ -41,11 +42,10 @@ def fetch_latest_news(is_initial=False):
     for news in news_data:
         title = news.title
         relevance = llm_client.evaluate_relevance(title, "民生用品的價格變化")
-        if relevance == "high":
+        if relevance == RelevanceEvaluation.high:
             detailed_news = udn_crawler.validate_and_parse(news.url)
 
             result = llm_client.generate_summary(" ".join(detailed_news["content"]))
-            result = json.loads(result)
             detailed_news = NewsWithSummary(
                 url=detailed_news.url,
                 title=detailed_news.title,
