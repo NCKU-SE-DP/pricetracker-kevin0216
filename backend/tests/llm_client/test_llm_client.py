@@ -54,7 +54,7 @@ class TestOpenAIClient(unittest.TestCase):
 
         result = self.client.generate_summary("一篇新聞內容")
 
-        self.assertEqual(result, '{"影響": "影響描述", "原因": "原因描述"}')
+        self.assertEqual(result, {"影響": "影響描述", "原因": "原因描述"})
 
         mock_generate.assert_called_once_with(
             PromptPassingInterface(
