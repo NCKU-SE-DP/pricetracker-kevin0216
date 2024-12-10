@@ -115,21 +115,25 @@ class UDNCrawler(NewsCrawlerBase):
 
     @staticmethod
     def _extract_news(soup: BeautifulSoup, url: str) -> News:
-        title = soup.find("h1", class_="article-content__title").text
-        content_time = soup.find("time", class_="article-content__time").text
-        content_section = soup.find("section", class_="article-content__editor")
-        paragraphs = [
-            paragraph.text
-            for paragraph in content_section.find_all("p")
-            if paragraph.text.strip() != "" and "▪" not in paragraph.text
-        ]
+        try:
+            title = soup.find("h1", class_="article-content__title").text
+            content_time = soup.find("time", class_="article-content__time").text
+            content_section = soup.find("section", class_="article-content__editor")
+            paragraphs = [
+                paragraph.text
+                for paragraph in content_section.find_all("p")
+                if paragraph.text.strip() != "" and "▪" not in paragraph.text
+            ]
 
-        return News(
-            url=url,
-            title=title,
-            time=content_time,
-            content=" ".join(paragraphs)
-        )
+            return News(
+                url=url,
+                title=title,
+                time=content_time,
+                content=" ".join(paragraphs)
+            )
+        except Exception as e:
+            print(f"Error extracting news content: {e}")
+            pass
 
     def save(self, news: NewsWithSummary, db: Session):
         db.add(NewsArticle(
