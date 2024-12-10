@@ -4,13 +4,15 @@ from sqlalchemy.orm import Session
 
 from ..crawler.crawler_base import NewsWithSummary
 from ..config import Config
-from ..llm_client.llm_client import LLMClient
+from ..llm_client.openai_client import OpenAIClient
 from ..llm_client.base import RelevanceEvaluation
+from ..llm_client.anthropic_client import AnthropicClient
 from ..models import user_news_association_table, NewsArticle
 from ..crawler.udn_crawler import UDNCrawler
 
 udn_crawler = UDNCrawler()
-llm_client = LLMClient(_api_key=Config.OpenAI.OPENAI_TOKEN)
+openai_client = OpenAIClient(api_key=Config.OpenAI.OPENAI_TOKEN)
+anthropic_client = AnthropicClient(api_key=Config.Anthropic.ANTHROPIC_TOKEN)
 
 def import_news(news_data: NewsWithSummary):
     """
@@ -41,11 +43,14 @@ def fetch_latest_news(is_initial=False):
     news_data = fetch_latest_news_info("價格", is_initial=is_initial)
     for news in news_data:
         title = news.title
-        relevance = llm_client.evaluate_relevance(title, "民生用品的價格變化")
-        if relevance == RelevanceEvaluation.high:
+        relevance = openai_client.evaluate_relevance(title, "民生用品的價格變化")
+        if relevance == RelevanceEvaluation.HIGH:
             detailed_news = udn_crawler.validate_and_parse(news.url)
 
-            result = llm_client.generate_summary(" ".join(detailed_news["content"]))
+            if detailed_news is None:
+                continue
+
+            result = openai_client.generate_summary(" ".join(detailed_news.content))
             detailed_news = NewsWithSummary(
                 url=detailed_news.url,
                 title=detailed_news.title,

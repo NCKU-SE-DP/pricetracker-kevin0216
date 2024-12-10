@@ -3,7 +3,7 @@ import os
 from unittest.mock import patch
 
 from src.llm_client.base import PromptPassingInterface
-from src.llm_client.llm_client import LLMClient
+from src.llm_client.openai_client import OpenAIClient
 from src.config import Config
 
 # 除非確認要使用真實的API進行測試(當然會因此擁有額外的開銷)，否則將RUN_REAL_API_TESTS設置為False
@@ -13,9 +13,9 @@ class TestOpenAIClient(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         if RUN_REAL_API_TESTS:
-            self.client = LLMClient(_api_key=Config.OpenAI.OPENAI_TOKEN)
+            self.client = OpenAIClient(api_key=Config.OpenAI.OPENAI_TOKEN)
         else:
-            self.client = LLMClient(_api_key="fake_api_key")
+            self.client = OpenAIClient(api_key="fake_api_key")
 
     @unittest.skipIf(not RUN_REAL_API_TESTS, "模擬 API 呼叫，跳過真實測試")
     def test_evaluate_relevance_real(self):
@@ -33,7 +33,7 @@ class TestOpenAIClient(unittest.TestCase):
         result = self.client.extract_search_keywords("這篇新聞提到食品價格的波動以及市場的供應鏈問題")
         self.assertGreater(len(result.split()), 0)
 
-    @patch('src.llm_client.llm_client.LLMClient._generate')
+    @patch('src.llm_client.openai_client.OpenAIClient._generate')
     def test_evaluate_relevance(self, mock_generate):
         mock_generate.return_value = 'high'
 
@@ -48,7 +48,7 @@ class TestOpenAIClient(unittest.TestCase):
             )
         )
 
-    @patch('src.llm_client.llm_client.LLMClient._generate')
+    @patch('src.llm_client.openai_client.OpenAIClient._generate')
     def test_generate_summary(self, mock_generate):
         mock_generate.return_value = '{"影響": "影響描述", "原因": "原因描述"}'
 
@@ -58,12 +58,12 @@ class TestOpenAIClient(unittest.TestCase):
 
         mock_generate.assert_called_once_with(
             PromptPassingInterface(
-                system_content="你是一個新聞摘要生成機器人，請統整新聞中提及的影響及主要原因 (影響、原因各50個字，請以json格式回答 {'影響': '...', '原因': '...'})",
+                system_content='你是一個新聞摘要生成機器人，請統整新聞中提及的影響及主要原因 (影響、原因各50個字，請以json格式回答 {"影響": "...", "原因": "..."})，並請確保返回有效 json 格式',
                 user_content="一篇新聞內容"
             )
         )
 
-    @patch('src.llm_client.llm_client.LLMClient._generate')
+    @patch('src.llm_client.openai_client.OpenAIClient._generate')
     def test_extract_search_keywords(self, mock_generate):
         mock_generate.return_value = '食品 價格'
 
