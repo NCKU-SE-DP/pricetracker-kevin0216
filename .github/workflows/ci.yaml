@@ -57,7 +57,7 @@ jobs:
           cd backend
           pytest tests/crawler --cov=src --cov-report=xml --disable-warnings
 
-      - name: Run backend openai_client module integration tests
+      - name: Run backend LLM Client module integration tests
         env:
           OPENAI_TOKEN: ${{ secrets.OPENAI_TOKEN }}
           ANTHROPIC_TOKEN: ${{ secrets.ANTHROPIC_TOKEN }}
