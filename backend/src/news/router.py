@@ -15,7 +15,7 @@ from ..crawler.exceptions import CrawlerException
 router = APIRouter(
     prefix="/news",
     tags=["news"],
-    responses={404: {"description": "Not found"}},
+    responses={418: {"description": "I'm a teapot, I can't brew coffee"}},
 )
 
 _id_counter = itertools.count(start=1000000)
