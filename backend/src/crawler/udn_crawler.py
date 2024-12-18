@@ -102,7 +102,7 @@ class UDNCrawler(NewsCrawlerBase):
 
     @staticmethod
     def _parse_headlines(response: Response) -> list[Headline]:
-        logging.debug(f"[UDNCrawler] Parsing headlines from response: {response.url}")
+        logging.debug(f"[UDNCrawler] Parsing headlines from response.")
         raw_news_list = response.json()["lists"]
         processed_news_list = []
         for raw_news in raw_news_list:
