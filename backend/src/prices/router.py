@@ -7,13 +7,14 @@ import logging
 router = APIRouter(
     prefix="/prices",
     tags=["prices"],
-    responses={404: {"description": "Not found"}},
+    responses={418: {"description": "I'm a teapot, I can't brew coffee"}},
 )
 
 @router.get("/necessities-price")
 def get_necessities_prices(
         category=Query(None), commodity=Query(None)
 ):
+    logging.debug(f"Accessed /api/v1/prices/necessities-price")
     try:
         return requests.get(
             "https://opendata.ey.gov.tw/api/ConsumerProtection/NecessitiesPrice",

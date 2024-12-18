@@ -15,7 +15,7 @@ from .schema import UserAuthSchema
 router = APIRouter(
     prefix="/users",
     tags=["users"],
-    responses={404: {"description": "Not found"}},
+    responses={418: {"description": "I'm a teapot, I can't brew coffee"}},
 )
 
 @router.post("/login")
