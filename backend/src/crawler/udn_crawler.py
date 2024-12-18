@@ -102,16 +102,20 @@ class UDNCrawler(NewsCrawlerBase):
 
     @staticmethod
     def _parse_headlines(response: Response) -> list[Headline]:
+        logging.debug(f"[UDNCrawler] Parsing headlines from response: {response.url}")
         raw_news_list = response.json()["lists"]
         processed_news_list = []
         for raw_news in raw_news_list:
+            logging.debug(f"[UDNCrawler] Extracting headline: {raw_news['title']}")
             headline = Headline(title=raw_news["title"], url=raw_news["titleLink"])
             processed_news_list.append(headline)
+        logging.debug(f"[UDNCrawler] Extracted {len(processed_news_list)} headlines.")
         return processed_news_list
 
     def parse(self, url: str) -> News:
         response = self._perform_request(url)
         if not self._is_valid_url(url):
+            logging.error(f"[UDNCrawler] Domain mismatch for URL: {url}")
             raise DomainMismatchException(url)
         try:
             return self._extract_news(BeautifulSoup(response.text, "html.parser"), url)
@@ -122,6 +126,7 @@ class UDNCrawler(NewsCrawlerBase):
     @staticmethod
     def _extract_news(soup: BeautifulSoup, url: str) -> News:
         try:
+            logging.debug(f"[UDNCrawler] Extracting news content from: {url}")
             title = soup.find("h1", class_="article-content__title").text
             content_time = soup.find("time", class_="article-content__time").text
             content_section = soup.find("section", class_="article-content__editor")
@@ -131,6 +136,7 @@ class UDNCrawler(NewsCrawlerBase):
                 if paragraph.text.strip() != "" and "▪" not in paragraph.text
             ]
 
+            logging.debug(f"[UDNCrawler] Extracted news content: {title}")
             return News(
                 url=url,
                 title=title,
@@ -150,6 +156,7 @@ class UDNCrawler(NewsCrawlerBase):
             summary=news.summary,
             reason=news.reason,
         ))
+        logging.debug(f"[UDNCrawler] Saving news article: {news.title}")
         self._commit_changes(db)
 
     @staticmethod
@@ -161,3 +168,4 @@ class UDNCrawler(NewsCrawlerBase):
             capture_exception(e)
             db.rollback()
         db.close()
+        logging.debug("[UDNCrawler] Changes committed to database.")
