@@ -28,6 +28,8 @@ def upvote_article(
 ):
     logging.debug(f"{user.id} accessed /api/v1/news/{news_id}/upvote")
     message = toggle_upvote(news_id, user.id, db)
+    if "Failed" in message:
+        return HTTPException(status_code=400, detail=message)
     return {"message": message}
 
 @router.get("/news")
