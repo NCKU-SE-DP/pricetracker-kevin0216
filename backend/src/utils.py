@@ -28,7 +28,7 @@ def init_logger():
     logger.addHandler(file_handler)
 
     rotating_file_handler = RotatingFileHandler(
-        "log/pricetracker_rotating.log", maxBytes=5 * 1024 * 1024, backupCount=3
+        "log/pricetracker.err", maxBytes=5 * 1024 * 1024, backupCount=3
     )
     rotating_file_handler.setLevel(logging.ERROR)
     rotating_file_handler.setFormatter(formatter)
