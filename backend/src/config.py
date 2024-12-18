@@ -6,7 +6,7 @@ dotenv.load_dotenv()
 class Config:
     class Basic:
         FASTAPI_PREFIX = "/api/v1"
-        SENTRY_DSN = "https://4001ffe917ccb261aa0e0c34026dc343@o4505702629834752.ingest.us.sentry.io/4507694792704000"
+        SENTRY_DSN = "https://0a278e051473367e7e55045324109d9d@o4508454845939712.ingest.us.sentry.io/4508454865076224"
         SENTRY_TRACES_SAMPLE_RATE = 1.0
         SENTRY_PROFILES_SAMPLE_RATE = 1.0
         ALLOWED_ORIGINS = ["http://localhost:8080"]

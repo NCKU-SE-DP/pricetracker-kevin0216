@@ -35,9 +35,11 @@ UDNCrawler Methods:
 from requests import Response, get
 from bs4 import BeautifulSoup
 from sqlalchemy.orm import Session
+import logging
+from sentry_sdk import capture_exception
 
 from .crawler_base import NewsCrawlerBase, Headline, News, NewsWithSummary
-from .exceptions import DomainMismatchException
+from .exceptions import DomainMismatchException, ParseException, ExtractionException
 
 from ..models import NewsArticle
 
@@ -111,7 +113,11 @@ class UDNCrawler(NewsCrawlerBase):
         response = self._perform_request(url)
         if not self._is_valid_url(url):
             raise DomainMismatchException(url)
-        return self._extract_news(BeautifulSoup(response.text, "html.parser"), url)
+        try:
+            return self._extract_news(BeautifulSoup(response.text, "html.parser"), url)
+        except Exception as e:
+            logging.error(f"[UDNCrawler] Error parsing news content: {e}")
+            raise ParseException(url)
 
     @staticmethod
     def _extract_news(soup: BeautifulSoup, url: str) -> News:
@@ -132,8 +138,8 @@ class UDNCrawler(NewsCrawlerBase):
                 content=" ".join(paragraphs)
             )
         except Exception as e:
-            print(f"Error extracting news content: {e}")
-            pass
+            logging.error(f"[UDNCrawler] Error extracting news content: {e}")
+            raise ExtractionException(url)
 
     def save(self, news: NewsWithSummary, db: Session):
         db.add(NewsArticle(
@@ -148,5 +154,10 @@ class UDNCrawler(NewsCrawlerBase):
 
     @staticmethod
     def _commit_changes(db: Session):
-        db.commit()
+        try:
+            db.commit()
+        except Exception as e:
+            logging.error(f"[UDNCrawler] Failed to save news to database: {e}")
+            capture_exception(e)
+            db.rollback()
         db.close()
