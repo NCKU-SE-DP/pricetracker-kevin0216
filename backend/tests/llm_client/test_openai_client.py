@@ -6,6 +6,8 @@ from src.llm_client.base import PromptPassingInterface
 from src.llm_client.openai_client import OpenAIClient
 from src.config import Config
 
+from src.llm_client.exceptions import EvaluationFailure
+
 # 除非確認要使用真實的API進行測試(當然會因此擁有額外的開銷)，否則將RUN_REAL_API_TESTS設置為False
 RUN_REAL_API_TESTS = os.getenv("RUN_REAL_API_TESTS", "false").lower() == "true"
 
@@ -78,6 +80,53 @@ class TestOpenAIClient(unittest.TestCase):
             )
         )
 
+    @patch('src.llm_client.openai_client.OpenAIClient._generate')
+    def test_evaluate_relevance_on_exception(self, mock_generate):
+        mock_generate.return_value = 'invalid_response'
+
+        with self.assertRaises(EvaluationFailure) as e:
+            self.client.evaluate_relevance("食品價格上漲")
+
+        self.assertEqual(str(e.exception), "Failed to evaluate the relevance of the news title with the prompt: invalid_response")
+
+        mock_generate.assert_called_once_with(
+            PromptPassingInterface(
+                system_content="你是一個關聯度評估機器人，請評估新聞標題是否與「民生用品的價格變化」相關，並給予'high'、'medium'、'low'評價。(僅需回答'high'、'medium'、'low'三個詞之一)",
+                user_content="食品價格上漲"
+            )
+        )
+
+    @patch('src.llm_client.openai_client.OpenAIClient._generate')
+    def test_generate_summary_on_exception(self, mock_generate):
+        mock_generate.return_value = '{"owo": "this is a invalid response", "uwu": "this should not work"}'
+
+        with self.assertRaises(EvaluationFailure) as e:
+            self.client.generate_summary("一篇新聞內容")
+
+        self.assertEqual(str(e.exception), "Failed to extract summary and reason as format returned from LLM is incorrect")
+
+        mock_generate.assert_called_once_with(
+            PromptPassingInterface(
+                system_content='你是一個新聞摘要生成機器人，請統整新聞中提及的影響及主要原因 (影響、原因各50個字，請以json格式回答 {"影響": "...", "原因": "..."})，並請確保返回有效 json 格式',
+                user_content="一篇新聞內容"
+            )
+        )
+
+    @patch('src.llm_client.openai_client.OpenAIClient._generate')
+    def test_extract_search_keywords_on_exception(self, mock_generate):
+        mock_generate.return_value = ''
+
+        with self.assertRaises(EvaluationFailure) as e:
+            self.client.extract_search_keywords("一段希望看到的新聞文字")
+
+        self.assertEqual(str(e.exception), "Failed to extract search keywords")
+
+        mock_generate.assert_called_once_with(
+            PromptPassingInterface(
+                system_content="你是一個關鍵字提取機器人，用戶將會輸入一段文字，表示其希望看見的新聞內容，請提取出用戶希望看見的關鍵字，請截取最重要的關鍵字即可，避免出現「新聞」、「資訊」等混淆搜尋引擎的字詞。(僅須回答關鍵字，若有多個關鍵字，請以空格分隔)",
+                user_content="一段希望看到的新聞文字"
+            )
+        )
 
 if __name__ == '__main__':
     unittest.main()

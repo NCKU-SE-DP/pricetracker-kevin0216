@@ -1,4 +1,5 @@
 import pytest
+import random
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, StaticPool
 from sqlalchemy.orm import sessionmaker
@@ -65,6 +66,15 @@ def test_register_user():
     data = response.json()
     assert data["username"] == "newuser"
 
+def test_register_user_with_long_username():
+    response = client.post("/api/v1/users/register", json={
+        "username": "a" * 100,
+        "password": "newpassword"
+    })
+
+    assert response.status_code == 418
+    data = response.json()
+    assert data['detail'] == "Username format is not accepted"
 
 def test_login_for_access_token(test_user):
     response = client.post("/api/v1/users/login", data={
@@ -85,3 +95,12 @@ def test_read_users_me(test_token):
     assert response.status_code == 200
     data = response.json()
     assert data["username"] == "testuser"
+
+def test_read_users_me_with_random_token(test_token):
+    test_token = "".join(random.sample(test_token, len(test_token)))
+    headers = {"Authorization": f"Bearer {test_token}"}
+    response = client.get("/api/v1/users/me", headers=headers)
+
+    assert response.status_code == 401
+    data = response.json()
+    assert "Invalid token" in data["detail"]

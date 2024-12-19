@@ -17,8 +17,12 @@ def verify_password(secret, hashed_secret) -> bool:
 
 def check_user_password_is_correct(db, username, password) -> Union[User, bool]:
     userdata = db.query(User).filter(User.username == username).first()
+    if userdata is None:
+        logging.debug(f"User not found: {username}")
+        return False
     try:
         if not verify_password(password, userdata.hashed_password):
+            logging.debug(f"Password is incorrect for user: {username}")
             return False
     except Exception as e:
         logging.error(f"Failed to verify password: {e}")

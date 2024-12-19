@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from http.client import responses
 from typing import Optional
 import json
 
@@ -34,10 +35,13 @@ class LLMClientTemplate(LLMClientBase, ABC):
         :param prompt:
         :return:
         """
-        return self._generate(PromptPassingInterface(
+        response = self._generate(PromptPassingInterface(
             system_content="你是一個關鍵字提取機器人，用戶將會輸入一段文字，表示其希望看見的新聞內容，請提取出用戶希望看見的關鍵字，請截取最重要的關鍵字即可，避免出現「新聞」、「資訊」等混淆搜尋引擎的字詞。(僅須回答關鍵字，若有多個關鍵字，請以空格分隔)",
             user_content=prompt
         ))
+        if response == "":
+            raise EvaluationFailure("Failed to extract search keywords")
+        return response
 
     def generate_summary(self, prompt: str) -> Optional[dict[str, str]]:
         """
@@ -50,7 +54,10 @@ class LLMClientTemplate(LLMClientBase, ABC):
             user_content=prompt,
         ))
         try:
-            return json.loads(response)
+            response_json: dict = json.loads(response)
+            if response_json.get("影響") is None or response_json.get("原因") is None:
+                raise EvaluationFailure("Failed to extract summary and reason as format returned from LLM is incorrect")
+            return response_json
         except json.JSONDecodeError:
             raise EvaluationFailure(f"Failed to generate a summary based on the prompt: {response}")
 
