@@ -24,7 +24,7 @@ def get_necessities_prices(
         logging.error(f"Failed to parse response: {e}")
         capture_exception(e)
         raise HTTPException(status_code=400, detail="Something went wrong while processing data")
-    except Exception as e:
+    except requests.RequestException as e:
         logging.error(f"Failed to fetch data: {e}")
         capture_exception(e)
         raise HTTPException(status_code=400, detail="Failed to fetch data")

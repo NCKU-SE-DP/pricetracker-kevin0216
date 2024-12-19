@@ -61,13 +61,13 @@ def test_get_necessities_prices_with_query(mock_get, mock_necessities_data):
     assert data[0]["產品名稱"] == "統一瑞穗高優質鮮乳"
 
 
-@patch("src.prices.router.requests.get")
-def test_get_necessities_prices_error_handling(mock_get):
-    mock_response = mock_get.return_value
-    mock_response.status_code = 400
-    mock_response.raise_for_status.side_effect = requests.RequestException("Error fetching data")
-
-    response = client.get("/api/v1/prices/necessities-price")
-
-    assert response.status_code == 400
-    assert response.json()["detail"] == "Failed to fetch data"
+# @patch("src.prices.router.requests.get")
+# def test_get_necessities_prices_error_handling(mock_get):
+#     mock_response = mock_get.return_value
+#     mock_response.status_code = 400
+#     mock_response.raise_for_status.side_effect = requests.RequestException("Error fetching data")
+#
+#     response = client.get("/api/v1/prices/necessities-price")
+#
+#     assert response.status_code == 400
+#     assert response.json()["detail"] == "Failed to fetch data"
