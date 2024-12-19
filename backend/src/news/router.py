@@ -29,7 +29,7 @@ def upvote_article(
     logging.debug(f"{user.id} accessed /api/v1/news/{news_id}/upvote")
     message = toggle_upvote(news_id, user.id, db)
     if "Failed" in message:
-        return HTTPException(status_code=400, detail=message)
+        raise HTTPException(status_code=400, detail=message)
     return {"message": message}
 
 @router.get("/news")
@@ -46,7 +46,7 @@ def fetch_news(db=Depends(session_opener)):
     except Exception as e:
         logging.error(f"Failed to fetch news: {e}")
         capture_exception(e)
-        return HTTPException(status_code=400, detail="Failed to fetch news")
+        raise HTTPException(status_code=400, detail="Failed to fetch news")
     result = []
     for news_item in news:
         try:
@@ -78,7 +78,7 @@ def fetch_user_upvoted_news(
     except Exception as e:
         logging.error(f"Failed to fetch news: {e}")
         capture_exception(e)
-        return HTTPException(status_code=400, detail="Failed to fetch news")
+        raise HTTPException(status_code=400, detail="Failed to fetch news")
     result = []
     for article in news:
         try:
@@ -107,14 +107,14 @@ async def search_news(request: PromptRequest):
     except EvaluationFailure as e:
         logging.error(f"Failed to extract search keywords: {e}")
         capture_exception(e)
-        return HTTPException(status_code=400, detail="Something went wrong while processing search keywords")
+        raise HTTPException(status_code=400, detail="Something went wrong while processing search keywords")
     # should change into simple factory pattern
     try:
         news_items = fetch_latest_news_info(keywords)
     except Exception as e:
         logging.error(f"Failed to fetch news info: {e}")
         capture_exception(e)
-        return HTTPException(status_code=400, detail="Failed to fetch news info")
+        raise HTTPException(status_code=400, detail="Failed to fetch news info")
     for news in news_items:
         try:
             detailed_news = udn_crawler.validate_and_parse(news.url)
@@ -133,17 +133,17 @@ async def _generate_summary(
 
     try:
         if not llm_model:
-            return HTTPException(status_code=400, detail="Model is required")
+            raise HTTPException(status_code=400, detail="Model is required")
         elif llm_model.lower() == "openai":
             result = openai_client.generate_summary(payload.content)
         elif llm_model.lower() == "anthropic" or llm_model.lower() == "claude":
             result = anthropic_client.generate_summary(payload.content)
         else:
-            return HTTPException(status_code=400, detail="Invalid model")
+            raise HTTPException(status_code=400, detail="Invalid model")
     except EvaluationFailure as e:
         logging.error(f"Failed to generate summary: {e}")
         capture_exception(e)
-        return HTTPException(status_code=400, detail="Failed to generate summary")
+        raise HTTPException(status_code=400, detail="Failed to generate summary")
 
     if result:
         try:
@@ -152,7 +152,7 @@ async def _generate_summary(
         except KeyError as e:
             logging.error(f"Failed to extract summary and reason as format returned from LLM is incorrect: {e}")
             capture_exception(e)
-            return HTTPException(status_code=400, detail="Something went wrong while processing summary")
+            raise HTTPException(status_code=400, detail="Something went wrong while processing summary")
     return response
 
 @router.post("/news_summary")

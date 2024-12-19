@@ -34,7 +34,7 @@ async def login_for_access_token(
         )
     except Exception as e:
         capture_exception(e)
-        return HTTPException(status_code=400, detail="Something went wrong while processing the request")
+        raise HTTPException(status_code=400, detail="Something went wrong while processing the request")
     logging.debug(f"Logged in: {form_data.username}")
     return {"access_token": access_token, "token_type": "bearer"}
 
@@ -42,6 +42,9 @@ async def login_for_access_token(
 def create_user(user: UserAuthSchema, db: Session = Depends(session_opener)):
     """create users"""
     logging.debug(f"Creating user: {user.username}")
+    if len(user.username) > Config.Auth.USERNAME_MAX_LENGTH:
+        logging.debug(f"Username too long: {user.username}")
+        raise HTTPException(status_code=418, detail="Username format is not accepted")
     hashed_password = password_context.hash(user.password)
     db_user = User(username=user.username, hashed_password=hashed_password)
     db.add(db_user)
@@ -51,7 +54,7 @@ def create_user(user: UserAuthSchema, db: Session = Depends(session_opener)):
         logging.warning(f"Failed to create user: {user.username}, {e}, skipping.")
         capture_exception(e)
         db.rollback()
-        return HTTPException(status_code=400, detail="Failed to create user")
+        raise HTTPException(status_code=400, detail="Failed to create user")
     db.refresh(db_user)
     logging.debug(f"Created user: {user.username}")
     return db_user
