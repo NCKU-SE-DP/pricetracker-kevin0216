@@ -35,9 +35,11 @@ UDNCrawler Methods:
 from requests import Response, get
 from bs4 import BeautifulSoup
 from sqlalchemy.orm import Session
+import logging
+from sentry_sdk import capture_exception
 
 from .crawler_base import NewsCrawlerBase, Headline, News, NewsWithSummary
-from .exceptions import DomainMismatchException
+from .exceptions import DomainMismatchException, ParseException, ExtractionException
 
 from ..models import NewsArticle
 
@@ -100,22 +102,31 @@ class UDNCrawler(NewsCrawlerBase):
 
     @staticmethod
     def _parse_headlines(response: Response) -> list[Headline]:
+        logging.debug(f"[UDNCrawler] Parsing headlines from response.")
         raw_news_list = response.json()["lists"]
         processed_news_list = []
         for raw_news in raw_news_list:
+            logging.debug(f"[UDNCrawler] Extracting headline: {raw_news['title']}")
             headline = Headline(title=raw_news["title"], url=raw_news["titleLink"])
             processed_news_list.append(headline)
+        logging.debug(f"[UDNCrawler] Extracted {len(processed_news_list)} headlines.")
         return processed_news_list
 
     def parse(self, url: str) -> News:
         response = self._perform_request(url)
         if not self._is_valid_url(url):
+            logging.error(f"[UDNCrawler] Domain mismatch for URL: {url}")
             raise DomainMismatchException(url)
-        return self._extract_news(BeautifulSoup(response.text, "html.parser"), url)
+        try:
+            return self._extract_news(BeautifulSoup(response.text, "html.parser"), url)
+        except Exception as e:
+            logging.error(f"[UDNCrawler] Error parsing news content: {e}")
+            raise ParseException(url)
 
     @staticmethod
     def _extract_news(soup: BeautifulSoup, url: str) -> News:
         try:
+            logging.debug(f"[UDNCrawler] Extracting news content from: {url}")
             title = soup.find("h1", class_="article-content__title").text
             content_time = soup.find("time", class_="article-content__time").text
             content_section = soup.find("section", class_="article-content__editor")
@@ -125,6 +136,7 @@ class UDNCrawler(NewsCrawlerBase):
                 if paragraph.text.strip() != "" and "▪" not in paragraph.text
             ]
 
+            logging.debug(f"[UDNCrawler] Extracted news content: {title}")
             return News(
                 url=url,
                 title=title,
@@ -132,8 +144,8 @@ class UDNCrawler(NewsCrawlerBase):
                 content=" ".join(paragraphs)
             )
         except Exception as e:
-            print(f"Error extracting news content: {e}")
-            pass
+            logging.error(f"[UDNCrawler] Error extracting news content: {e}")
+            raise ExtractionException(url)
 
     def save(self, news: NewsWithSummary, db: Session):
         db.add(NewsArticle(
@@ -144,9 +156,16 @@ class UDNCrawler(NewsCrawlerBase):
             summary=news.summary,
             reason=news.reason,
         ))
+        logging.debug(f"[UDNCrawler] Saving news article: {news.title}")
         self._commit_changes(db)
 
     @staticmethod
     def _commit_changes(db: Session):
-        db.commit()
+        try:
+            db.commit()
+        except Exception as e:
+            logging.error(f"[UDNCrawler] Failed to save news to database: {e}")
+            capture_exception(e)
+            db.rollback()
         db.close()
+        logging.debug("[UDNCrawler] Changes committed to database.")

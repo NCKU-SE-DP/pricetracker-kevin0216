@@ -1,3 +1,9 @@
+from .utils import init_logger
+import logging
+init_logger()
+
+logging.debug("Initialisation started.")
+
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI
 from sqlalchemy.orm import sessionmaker
@@ -16,8 +22,11 @@ app = FastAPI()
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=db_engine)
 
 app.include_router(news_router, prefix=Config.Basic.FASTAPI_PREFIX)
+logging.debug("News router (/news) initialised")
 app.include_router(users_router, prefix=Config.Basic.FASTAPI_PREFIX)
+logging.debug("Users router (/router) initialised")
 app.include_router(prices_router, prefix=Config.Basic.FASTAPI_PREFIX)
+logging.debug("Prices router (/prices) initialised")
 
 app.add_middleware(
     CORSMiddleware,  # noqa
@@ -32,11 +41,15 @@ def start_scheduler():
     db = SessionLocal()
     if db.query(NewsArticle).count() == 0:
         # should change into simple factory pattern
+        logging.info("No news present in the database. Fetching latest news.")
         fetch_latest_news()
     db.close()
     background_scheduler.add_job(fetch_latest_news, "interval", minutes=Config.News.NEWS_FETCH_INTERVAL_MINUTES)
     background_scheduler.start()
+    logging.debug("Background scheduler started.")
+    logging.info("PriceTracker backend has started.")
 
 @app.on_event("shutdown")
 def shutdown_scheduler():
     background_scheduler.shutdown()
+    logging.debug("Background scheduler shutdown.")
