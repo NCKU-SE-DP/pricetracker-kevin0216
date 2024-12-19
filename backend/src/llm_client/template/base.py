@@ -1,34 +1,32 @@
-import json
-from openai import OpenAI, APIError, RateLimitError
+from abc import ABC, abstractmethod
 from typing import Optional
+import json
 
-from .base import LLMClientBase, PromptPassingInterface, RelevanceEvaluation
-from .exceptions import LLMClientInitializeException, EvaluationFailure
-from ..config import Config
+from ..base import LLMClientBase, PromptPassingInterface, RelevanceEvaluation
+from ..exceptions import EvaluationFailure
+from ...config import Config
 
-class LLMClient(LLMClientBase):
-    def __init__(self, _api_key: str):
-        try:
-            self.openai_client = OpenAI(api_key=_api_key)
-        except APIError as error:
-            raise LLMClientInitializeException(f"Failed to initialize the LLM client due to an error: {error}")
+class LLMClientTemplate(LLMClientBase, ABC):
+    def __init__(self, api_key: str):
+        self.api_key = api_key
+        self.model: str = ...
+        self._initialize_client()
 
-    def _generate(self, prompt: PromptPassingInterface) -> str:
-        if Config.OpenAI.OPENAI_ENABLED:
+    #initialize client function should be abstract
+    @abstractmethod
+    def _initialize_client(self):
+        ...
+
+    def _generate(self, prompt: PromptPassingInterface) -> Optional[str]:
+        if Config.LLM.LLM_ENABLED:
             try:
-                completion = self.openai_client.chat.completions.create(
-                    model=Config.OpenAI.OPENAI_LLM_MODEL,
+                completion = self.client.chat.completions.create(
+                    model=self.model,
                     messages=prompt.to_dict,
                 )
                 return completion.choices[0].message.content
-            except APIError as error:
-                print(f"[OpenAI] An error occurred: {error}")
-                return ""
-            except RateLimitError as error:
-                print(f"[OpenAI] Rate limit exceeded: {error}")
-                return ""
-        else:
-            return ""
+            except Exception as error:
+                raise EvaluationFailure(f"An API error occurred: {error}")
 
     def extract_search_keywords(self, prompt: str) -> str:
         """
@@ -48,7 +46,7 @@ class LLMClient(LLMClientBase):
         :return:
         """
         response = self._generate(PromptPassingInterface(
-            system_content="你是一個新聞摘要生成機器人，請統整新聞中提及的影響及主要原因 (影響、原因各50個字，請以json格式回答 {'影響': '...', '原因': '...'})",
+            system_content='你是一個新聞摘要生成機器人，請統整新聞中提及的影響及主要原因 (影響、原因各50個字，請以json格式回答 {"影響": "...", "原因": "..."})，並請確保返回有效 json 格式',
             user_content=prompt,
         ))
         try:
@@ -67,11 +65,7 @@ class LLMClient(LLMClientBase):
             system_content=f"你是一個關聯度評估機器人，請評估新聞標題是否與「{prompt}」相關，並給予'high'、'medium'、'low'評價。(僅需回答'high'、'medium'、'low'三個詞之一)",
             user_content=news_title
         ))
-        if response == "high":
-            return RelevanceEvaluation.high
-        elif response == "medium":
-            return RelevanceEvaluation.medium
-        elif response == "low":
-            return RelevanceEvaluation.low
-        else:
+        try:
+            return RelevanceEvaluation(response)
+        except ValueError:
             raise EvaluationFailure(f"Failed to evaluate the relevance of the news title with the prompt: {response}")
