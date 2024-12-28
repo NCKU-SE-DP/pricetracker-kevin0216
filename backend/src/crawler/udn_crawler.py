@@ -36,12 +36,13 @@ from requests import Response, get
 from bs4 import BeautifulSoup
 from sqlalchemy.orm import Session
 import logging
-from sentry_sdk import capture_exception
 
 from .crawler_base import NewsCrawlerBase, Headline, News, NewsWithSummary
 from .exceptions import ParseException, ExtractionException
 
 from ..models import NewsArticle
+from ..utils import log_exception, ExceptionLevel
+
 
 class UDNNewsMetadata:
     def __init__(self, page: int, id: str, channel_id: int, type: str) -> None:
@@ -103,8 +104,7 @@ class UDNCrawler(NewsCrawlerBase):
             logging.warning(f"[UDNCrawler] Request timed out.")
             raise
         except requests.exceptions.RequestException as e:
-            logging.warning(f"[UDNCrawler] Request failed: {e}")
-            capture_exception(e)
+            log_exception(e, ExceptionLevel.WARNING, "[UDNCrawler] Request failed.")
             raise
 
     @staticmethod
@@ -168,8 +168,7 @@ class UDNCrawler(NewsCrawlerBase):
         try:
             db.commit()
         except Exception as e:
-            logging.error(f"[UDNCrawler] Failed to save news to database: {e}")
-            capture_exception(e)
+            log_exception(e, ExceptionLevel.ERROR, "[UDNCrawler] Failed to save news to database.")
             db.rollback()
         db.close()
         logging.debug("[UDNCrawler] Changes committed to database.")

@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Query, HTTPException
 import requests
 from requests.exceptions import JSONDecodeError
-from sentry_sdk import capture_exception
 import logging
+
+from backend.src.utils import log_exception, ExceptionLevel
 
 router = APIRouter(
     prefix="/prices",
@@ -23,10 +24,8 @@ def get_necessities_prices(
         request.raise_for_status()
         return request.json()
     except JSONDecodeError as e:
-        logging.error(f"Failed to parse response: {e}")
-        capture_exception(e)
+        log_exception(e, ExceptionLevel.ERROR, "Failed to parse response")
         raise HTTPException(status_code=400, detail="Something went wrong while processing data")
     except requests.exceptions.RequestException as e:
-        logging.error(f"Failed to fetch data: {e}")
-        capture_exception(e)
+        log_exception(e, ExceptionLevel.ERROR, "Failed to fetch data")
         raise HTTPException(status_code=400, detail="Failed to fetch data")

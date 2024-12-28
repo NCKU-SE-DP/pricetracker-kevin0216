@@ -1,6 +1,3 @@
-import logging
-
-from sentry_sdk import capture_exception
 from sqlalchemy import select, delete, insert
 from sqlalchemy.orm import Session
 
@@ -13,6 +10,7 @@ from ..llm_client.base import RelevanceEvaluation
 from ..llm_client.exceptions import EvaluationFailure
 from ..llm_client.openai_client import OpenAIClient
 from ..models import user_news_association_table
+from ..utils import log_exception, ExceptionLevel
 
 udn_crawler = UDNCrawler()
 openai_client = OpenAIClient(api_key=Config.OpenAI.OPENAI_TOKEN)
@@ -53,15 +51,13 @@ def fetch_latest_news(is_initial=False):
         try:
             relevance = openai_client.evaluate_relevance(title, "民生用品的價格變化")
         except EvaluationFailure as e:
-            logging.error(f"Failed to evaluate relevance: {e}")
-            capture_exception(e)
+            log_exception(e, ExceptionLevel.WARNING, f"Failed to evaluate relevance for news {title}")
             return
         if relevance == RelevanceEvaluation.HIGH:
             try:
                 detailed_news = udn_crawler.validate_and_parse(news.url)
             except Exception as e:
-                logging.warning(f"Failed to validate and parse news for {news.title}: {e}, skipping")
-                capture_exception(e)
+                log_exception(e, ExceptionLevel.WARNING, f"Failed to validate and parse news for {news.title}")
                 continue
 
             if detailed_news is None:
@@ -70,8 +66,7 @@ def fetch_latest_news(is_initial=False):
             try:
                 result = openai_client.generate_summary(" ".join(detailed_news.content))
             except EvaluationFailure as e:
-                logging.warning(f"Failed to generate summary for news {news.title}: {e}, skipping.")
-                capture_exception(e)
+                log_exception(e, ExceptionLevel.WARNING, f"Failed to generate summary for news {news.title}")
                 continue
             detailed_news = NewsWithSummary(
                 url=detailed_news.url,
@@ -119,7 +114,6 @@ def toggle_upvote(news_id, user_id, db):
             db.commit()
         except Exception as e:
             db.rollback()
-            capture_exception(e)
             raise UpvoteException("Failed to remove upvote")
         return "Upvote removed"
     else:
@@ -131,6 +125,5 @@ def toggle_upvote(news_id, user_id, db):
             db.commit()
         except Exception as e:
             db.rollback()
-            capture_exception(e)
             raise UpvoteException("Failed to upvote")
         return "Article upvoted"

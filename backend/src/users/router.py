@@ -11,6 +11,7 @@ from ..auth.utils import check_user_password_is_correct, create_access_token, pa
 
 from ..models import User
 from .schema import UserAuthSchema
+from ..utils import log_exception, ExceptionLevel
 
 router = APIRouter(
     prefix="/users",
@@ -51,8 +52,7 @@ def create_user(user: UserAuthSchema, db: Session = Depends(session_opener)):
     try:
         db.commit()
     except Exception as e:
-        logging.warning(f"Failed to create user: {user.username}, {e}, skipping.")
-        capture_exception(e)
+        log_exception(e, ExceptionLevel.WARNING, "Failed to create user")
         db.rollback()
         raise HTTPException(status_code=400, detail="Failed to create user")
     db.refresh(db_user)
