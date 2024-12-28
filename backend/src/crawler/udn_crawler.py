@@ -39,7 +39,7 @@ import logging
 from sentry_sdk import capture_exception
 
 from .crawler_base import NewsCrawlerBase, Headline, News, NewsWithSummary
-from .exceptions import DomainMismatchException, ParseException, ExtractionException
+from .exceptions import ParseException, ExtractionException
 
 from ..models import NewsArticle
 
