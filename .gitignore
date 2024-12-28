@@ -4,3 +4,9 @@ __pycache__
 venv/*
 .idea/*
 .DS_Store
+test.db
+news_database.db
+backend/tests/integration/log/pricetracker.err
+backend/tests/integration/log/pricetracker.log
+backend/log/pricetracker.err
+backend/log/pricetracker.log
