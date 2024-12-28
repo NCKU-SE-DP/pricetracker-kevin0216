@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import BaseModel
 
 class PromptRequest(BaseModel):
@@ -8,4 +10,4 @@ class NewsSummaryRequestSchema(BaseModel):
 
 class NewsSummaryCustomModelRequestSchema(BaseModel):
     content: str
-    llm_model: str
+    llm_model: Literal["openai", "anthropic", "claude"]
