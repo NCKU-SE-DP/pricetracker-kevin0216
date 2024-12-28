@@ -116,7 +116,7 @@ class NewsCrawlerBase(metaclass=abc.ABCMeta):
 
     @staticmethod
     @abc.abstractmethod
-    def save(news: News, db: Session | None):
+    def save(news: NewsWithSummary, db: Session | None):
         """
         Save the news content to a persistent storage.
 
