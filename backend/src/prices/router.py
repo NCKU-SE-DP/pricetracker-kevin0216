@@ -3,7 +3,7 @@ import requests
 from requests.exceptions import JSONDecodeError
 import logging
 
-from backend.src.utils import log_exception, ExceptionLevel
+from ..utils import log_exception, ExceptionLevel
 
 router = APIRouter(
     prefix="/prices",
