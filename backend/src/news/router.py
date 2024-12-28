@@ -4,13 +4,14 @@ import logging
 from sentry_sdk import capture_exception
 from typing import Union
 
+from .exceptions import UpvoteException
 from ..auth.dependencies import session_opener, authenticate_user_token
 
-from .utils import toggle_upvote, fetch_news_upvote_details, fetch_latest_news_info, udn_crawler, openai_client, anthropic_client
+from .services import udn_crawler, openai_client, anthropic_client, fetch_latest_news_info, fetch_news_upvote_details, \
+    toggle_upvote
 from ..models import NewsArticle
 from .schema import PromptRequest, NewsSummaryRequestSchema, NewsSummaryCustomModelRequestSchema
 from ..llm_client.exceptions import EvaluationFailure
-from ..crawler.exceptions import CrawlerException
 
 router = APIRouter(
     prefix="/news",
@@ -27,9 +28,12 @@ def upvote_article(
         user=Depends(authenticate_user_token),
 ):
     logging.debug(f"{user.id} accessed /api/v1/news/{news_id}/upvote")
-    message = toggle_upvote(news_id, user.id, db)
-    if "Failed" in message:
-        raise HTTPException(status_code=400, detail=message)
+    try:
+        message = toggle_upvote(news_id, user.id, db)
+    except UpvoteException as e:
+        logging.warning(f"{e}")
+        capture_exception(e)
+        raise HTTPException(status_code=400, detail=e.message)
     return {"message": message}
 
 @router.get("/news")
