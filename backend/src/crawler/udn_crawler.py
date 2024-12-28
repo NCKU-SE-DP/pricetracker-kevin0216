@@ -31,7 +31,7 @@ UDNCrawler Methods:
     save(self, news: News, db: Session): Saves a news article to the database.
     _commit_changes(db: Session): Commits the changes to the database with error handling.
 """
-
+import requests
 from requests import Response, get
 from bs4 import BeautifulSoup
 from sqlalchemy.orm import Session
@@ -96,9 +96,16 @@ class UDNCrawler(NewsCrawlerBase):
     def _create_search_params(self, page: int, search_term: str, type: str = "searchword") -> dict:
         return UDNNewsMetadata(page, f"search:{search_term}", self.CHANNEL_ID, type).to_dict
 
-    @staticmethod
-    def _perform_request(url: str | None = None, params: dict | None = None) -> Response:
-        return get(url, params=params)
+    def _perform_request(self, url: str | None = None, params: dict | None = None) -> Response:
+        try:
+            return get(url, params=params, timeout=self.timeout)
+        except requests.exceptions.Timeout:
+            logging.warning(f"[UDNCrawler] Request timed out.")
+            raise
+        except requests.exceptions.RequestException as e:
+            logging.warning(f"[UDNCrawler] Request failed: {e}")
+            capture_exception(e)
+            raise
 
     @staticmethod
     def _parse_headlines(response: Response) -> list[Headline]:
