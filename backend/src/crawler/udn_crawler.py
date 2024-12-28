@@ -81,7 +81,7 @@ class UDNCrawler(NewsCrawlerBase):
         # Calculate the range of pages to fetch news from.
         # If 'page' is a tuple, unpack it and create a range representing those pages (inclusive).
         # If 'page' is an int, create a list containing only that single page number.
-        page_range = range(*page) if isinstance(page, tuple) else [page]
+        page_range = range(page[0], page[1]+1) if isinstance(page, tuple) else [page]
         news_data = []
         for page in page_range:
             news_data.extend(self._fetch_news(page, search_term))
