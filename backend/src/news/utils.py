@@ -33,7 +33,7 @@ def fetch_latest_news_info(search_term: str, is_initial=False):
     :param is_initial:
     :return:
     """
-    return udn_crawler.startup(search_term) if is_initial else udn_crawler.get_headline(search_term, 1)
+    return udn_crawler.startup(search_term) if is_initial else udn_crawler.get_headlines(search_term, 1)
 
 def fetch_latest_news(is_initial=False):
     """

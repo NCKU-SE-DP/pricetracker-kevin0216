@@ -72,9 +72,9 @@ class UDNCrawler(NewsCrawlerBase):
         :return: A list of Headline namedtuples containing the title and URL of news articles.
         :rtype: list[Headline]
         """
-        return self.get_headline(search_term, page=(1, 10))
+        return self.get_headlines(search_term, page=(1, 10))
 
-    def get_headline(
+    def get_headlines(
         self, search_term: str, page: int | tuple[int, int]
     ) -> list[Headline]:
 
