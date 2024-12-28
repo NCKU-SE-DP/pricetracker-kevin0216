@@ -84,11 +84,11 @@ class UDNCrawler(NewsCrawlerBase):
         page_range = range(page[0], page[1]+1) if isinstance(page, tuple) else [page]
         news_data = []
         for page in page_range:
-            news_data.extend(self._fetch_news(page, search_term))
+            news_data.extend(self._fetch_headlines(page, search_term))
 
         return news_data
 
-    def _fetch_news(self, page: int, search_term: str) -> list[Headline]:
+    def _fetch_headlines(self, page: int, search_term: str) -> list[Headline]:
         response = self._perform_request(self.news_website_url,
                                          self._create_search_params(page, search_term, "searchword"))
         return self._parse_headlines(response)
