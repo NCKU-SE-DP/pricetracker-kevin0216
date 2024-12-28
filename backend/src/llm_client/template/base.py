@@ -23,7 +23,7 @@ class LLMClientTemplate(LLMClientBase, ABC):
             try:
                 completion = self.client.chat.completions.create(
                     model=self.model,
-                    messages=prompt.to_dict,
+                    messages=prompt.to_prompt,
                 )
                 return completion.choices[0].message.content
             except Exception as error:

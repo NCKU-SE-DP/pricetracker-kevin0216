@@ -8,7 +8,7 @@ class PromptPassingInterface(BaseModel):
     user_content: str = Field(...)
 
     @property
-    def to_dict(self):
+    def to_prompt(self) -> list[dict[str, str]]:
         value = [
             {"role": "system", "content": f"{self.system_content}"},
             {"role": "user", "content": f"{self.user_content}"},
