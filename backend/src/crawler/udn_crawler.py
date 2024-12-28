@@ -115,12 +115,12 @@ class UDNCrawler(NewsCrawlerBase):
     def parse(self, url: str) -> News:
         response = self._perform_request(url)
         if not self._is_valid_url(url):
-            logging.error(f"[UDNCrawler] Domain mismatch for URL: {url}")
+            logging.warning(f"[UDNCrawler] Domain mismatch for URL: {url}")
             raise DomainMismatchException(url)
         try:
             return self._extract_news(BeautifulSoup(response.text, "html.parser"), url)
         except Exception as e:
-            logging.error(f"[UDNCrawler] Error parsing news content: {e}")
+            logging.warning(f"[UDNCrawler] Error parsing news content: {e}")
             raise ParseException(url)
 
     @staticmethod
@@ -144,7 +144,7 @@ class UDNCrawler(NewsCrawlerBase):
                 content=" ".join(paragraphs)
             )
         except Exception as e:
-            logging.error(f"[UDNCrawler] Error extracting news content: {e}")
+            logging.warning(f"[UDNCrawler] Error extracting news content: {e}")
             raise ExtractionException(url)
 
     def save(self, news: NewsWithSummary, db: Session):
