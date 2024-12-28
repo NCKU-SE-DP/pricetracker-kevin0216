@@ -114,9 +114,6 @@ class UDNCrawler(NewsCrawlerBase):
 
     def parse(self, url: str) -> News:
         response = self._perform_request(url)
-        if not self._is_valid_url(url):
-            logging.warning(f"[UDNCrawler] Domain mismatch for URL: {url}")
-            raise DomainMismatchException(url)
         try:
             return self._extract_news(BeautifulSoup(response.text, "html.parser"), url)
         except Exception as e:

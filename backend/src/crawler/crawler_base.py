@@ -2,6 +2,7 @@ import abc
 from pydantic import AnyHttpUrl
 from tldextract import tldextract
 from sqlalchemy.orm import Session
+import logging
 
 from .exceptions import DomainMismatchException
 
@@ -108,6 +109,7 @@ class NewsCrawlerBase(metaclass=abc.ABCMeta):
         """
 
         if not self._is_valid_url(url):
+            logging.warning(f"[{self.__class__.__name__}] Domain mismatch for URL: {url}")
             raise DomainMismatchException(url)
         return self.parse(url)
 
