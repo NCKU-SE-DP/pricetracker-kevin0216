@@ -3,12 +3,12 @@ from jose import jwt
 from typing import Union
 from passlib.context import CryptContext
 import logging
-from sentry_sdk import capture_exception
 
 from ..models import User
 from ..config import Config
 
 from .constants import DEFAULT_ACCESS_TOKEN_EXPIRE_MINUTES
+from ..utils import log_exception, ExceptionLevel
 
 password_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -25,8 +25,7 @@ def check_user_password_is_correct(db, username, password) -> Union[User, bool]:
             logging.debug(f"Password is incorrect for user: {username}")
             return False
     except Exception as e:
-        logging.error(f"Failed to verify password: {e}")
-        capture_exception(e)
+        log_exception(e, ExceptionLevel.WARNING, "Failed to verify password")
         return False
     return userdata
 

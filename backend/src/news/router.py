@@ -1,16 +1,17 @@
 from fastapi import APIRouter, Depends, HTTPException
 import itertools
 import logging
-from sentry_sdk import capture_exception
 from typing import Union
 
+from .exceptions import UpvoteException
 from ..auth.dependencies import session_opener, authenticate_user_token
 
-from .utils import toggle_upvote, fetch_news_upvote_details, fetch_latest_news_info, udn_crawler, openai_client, anthropic_client
+from .services import udn_crawler, openai_client, anthropic_client, fetch_latest_news_info, fetch_news_upvote_details, \
+    toggle_upvote
 from ..models import NewsArticle
 from .schema import PromptRequest, NewsSummaryRequestSchema, NewsSummaryCustomModelRequestSchema
 from ..llm_client.exceptions import EvaluationFailure
-from ..crawler.exceptions import CrawlerException
+from ..utils import log_exception, ExceptionLevel
 
 router = APIRouter(
     prefix="/news",
@@ -27,9 +28,11 @@ def upvote_article(
         user=Depends(authenticate_user_token),
 ):
     logging.debug(f"{user.id} accessed /api/v1/news/{news_id}/upvote")
-    message = toggle_upvote(news_id, user.id, db)
-    if "Failed" in message:
-        raise HTTPException(status_code=400, detail=message)
+    try:
+        message = toggle_upvote(news_id, user.id, db)
+    except UpvoteException as e:
+        log_exception(e, ExceptionLevel.WARNING, f"{e.message}")
+        raise HTTPException(status_code=400, detail=e.message)
     return {"message": message}
 
 @router.get("/news")
@@ -44,16 +47,14 @@ def fetch_news(db=Depends(session_opener)):
     try:
         news = db.query(NewsArticle).order_by(NewsArticle.time.desc()).all()
     except Exception as e:
-        logging.error(f"Failed to fetch news: {e}")
-        capture_exception(e)
+        log_exception(e, ExceptionLevel.ERROR, "Failed to fetch news")
         raise HTTPException(status_code=400, detail="Failed to fetch news")
     result = []
     for news_item in news:
         try:
             upvote_num, is_upvoted = fetch_news_upvote_details(news_item.id, None, db)
         except Exception as e:
-            logging.warning(f"Failed to fetch upvote details for news '{news_item.id}': {e}, skipping.")
-            capture_exception(e)
+            log_exception(e, ExceptionLevel.WARNING, f"Failed to fetch upvote details for news '{news_item.id}', skipping")
             continue
         result.append(
             {**news_item.__dict__, "upvotes": upvote_num, "is_upvoted": is_upvoted}
@@ -76,16 +77,14 @@ def fetch_user_upvoted_news(
     try:
         news = db.query(NewsArticle).order_by(NewsArticle.time.desc()).all()
     except Exception as e:
-        logging.error(f"Failed to fetch news: {e}")
-        capture_exception(e)
+        log_exception(e, ExceptionLevel.ERROR, "Failed to fetch news")
         raise HTTPException(status_code=400, detail="Failed to fetch news")
     result = []
     for article in news:
         try:
             upvote_num, is_upvoted = fetch_news_upvote_details(article.id, user.id, db)
         except Exception as e:
-            logging.warning(f"Failed to fetch upvote details for news '{article.id}': {e}, skipping.")
-            capture_exception(e)
+            log_exception(e, ExceptionLevel.WARNING, f"Failed to fetch upvote details for news '{article.id}', skipping")
             continue
         result.append(
             {
@@ -105,22 +104,19 @@ async def search_news(request: PromptRequest):
     try:
         keywords = openai_client.extract_search_keywords(prompt)
     except EvaluationFailure as e:
-        logging.error(f"Failed to extract search keywords: {e}")
-        capture_exception(e)
+        log_exception(e, ExceptionLevel.WARNING, "Failed to extract search keywords")
         raise HTTPException(status_code=400, detail="Something went wrong while processing search keywords")
     # should change into simple factory pattern
     try:
         news_items = fetch_latest_news_info(keywords)
     except Exception as e:
-        logging.error(f"Failed to fetch news info: {e}")
-        capture_exception(e)
+        log_exception(e, ExceptionLevel.ERROR, "Failed to fetch news info")
         raise HTTPException(status_code=400, detail="Failed to fetch news info")
     for news in news_items:
         try:
             detailed_news = udn_crawler.validate_and_parse(news.url)
         except Exception as e:
-            logging.error(f"Failed to validate and parse news: {e}")
-            capture_exception(e)
+            log_exception(e, ExceptionLevel.WARNING, f"Failed to validate and parse news: {e}")
             continue
         detailed_news.id = next(_id_counter)
         news_list.append(detailed_news)
@@ -141,8 +137,7 @@ async def _generate_summary(
         else:
             raise HTTPException(status_code=400, detail="Invalid model")
     except EvaluationFailure as e:
-        logging.error(f"Failed to generate summary: {e}")
-        capture_exception(e)
+        log_exception(e, ExceptionLevel.WARNING, "Failed to generate summary")
         raise HTTPException(status_code=400, detail="Failed to generate summary")
 
     if result:
@@ -150,8 +145,7 @@ async def _generate_summary(
             response["summary"] = result["影響"]
             response["reason"] = result["原因"]
         except KeyError as e:
-            logging.error(f"Failed to extract summary and reason as format returned from LLM is incorrect: {e}")
-            capture_exception(e)
+            log_exception(e, ExceptionLevel.WARNING, "Failed to extract summary and reason")
             raise HTTPException(status_code=400, detail="Something went wrong while processing summary")
     return response
 

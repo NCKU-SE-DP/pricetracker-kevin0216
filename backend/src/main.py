@@ -13,7 +13,7 @@ from .models import NewsArticle
 from .services import background_scheduler
 from .config import Config
 
-from .news.utils import fetch_latest_news
+from .news.services import fetch_latest_news
 from .news.router import router as news_router
 from .users.router import router as users_router
 from .prices.router import router as prices_router

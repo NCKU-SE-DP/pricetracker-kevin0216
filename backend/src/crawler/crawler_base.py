@@ -2,6 +2,7 @@ import abc
 from pydantic import AnyHttpUrl
 from tldextract import tldextract
 from sqlalchemy.orm import Session
+import logging
 
 from .exceptions import DomainMismatchException
 
@@ -57,7 +58,7 @@ class NewsCrawlerBase(metaclass=abc.ABCMeta):
     news_website_news_child_urls: list[AnyHttpUrl | str]
 
     @abc.abstractmethod
-    def get_headline(
+    def get_headlines(
             self, search_term: str, page: int | tuple[int, int]
     ) -> list[Headline]:
         """
@@ -108,13 +109,14 @@ class NewsCrawlerBase(metaclass=abc.ABCMeta):
         """
 
         if not self._is_valid_url(url):
+            logging.warning(f"[{self.__class__.__name__}] Domain mismatch for URL: {url}")
             raise DomainMismatchException(url)
         return self.parse(url)
 
 
     @staticmethod
     @abc.abstractmethod
-    def save(news: News, db: Session | None):
+    def save(news: NewsWithSummary, db: Session | None):
         """
         Save the news content to a persistent storage.
 
